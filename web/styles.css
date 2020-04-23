@@ -1,8 +1,53 @@
 @import url(https://fonts.googleapis.com/css?family=Roboto);
 
 body {
+  margin: 0;
   font-family: 'Roboto', sans-serif;
   position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.top-bar {
+  display: inline-flex;
+  flex-direction: column;
+  background-color: white;
+  box-shadow: 0 0 15px #000a;
+  padding: 10px;
+}
+
+.controls {
+  display: inline-flex;
+  flex-direction: row;
+  margin-top: 10px;
+}
+
+.control {
+  display: inline-flex;
+  flex-direction: row;
+  margin-right: 10px;
+}
+
+label {
+  margin-right: 5px;
+  align-self: center;
+}
+label::after {
+  content: ':';
+}
+
+input {
+  width: 200px;
+  font-family: inherit;
+}
+input[type=number] {
+  width: 50px;
+}
+
+
+div.image {
+  position: relative;
+  margin: 10px;
 }
 
 img {
