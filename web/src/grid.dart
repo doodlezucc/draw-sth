@@ -1,4 +1,5 @@
 import 'dart:html';
+import 'dart:math';
 
 import 'project.dart';
 
@@ -6,12 +7,14 @@ class Grid {
   final Project project;
   final DivElement el = querySelector('#grid');
 
-  String _gridColor = '#fff6';
+  String _gridColor = '#fff9';
   String get gridColor => _gridColor;
   set gridColor(String gridColor) {
     _gridColor = gridColor;
     project.redraw();
   }
+
+  String get subGridColor => '#ccc4';
 
   String _outsideColor = '#000a';
   String get outsideColor => _outsideColor;
@@ -139,20 +142,31 @@ class Grid {
     ctx.strokeRect(
         pos.x.round() - 0.5, pos.y.round() - 0.5, sizeMinus.x, sizeMinus.y);
 
-    var lines = Point<int>(divisions.x + 1, divisions.y + 1);
+    var lines = Point<int>((divisions.x + 1) * pow(2, subdivisions),
+        (divisions.y + 1) * pow(2, subdivisions));
 
-    ctx.beginPath();
+    void setStroke(int i) {
+      ctx.strokeStyle =
+          i % (pow(2, subdivisions)) == 0 ? gridColor : subGridColor;
+    }
+
     for (var i = 1; i < lines.x; i++) {
+      setStroke(i);
+
       var x = (pos.x + sizeMinus.x * (i / lines.x)).round() - 0.5;
+      ctx.beginPath();
       ctx.moveTo(x, pos.y);
-      ctx.lineTo(x, pos.y + sizeMinus.y);
+      ctx.lineTo(x, pos.y + sizeMinus.y - 1);
+      ctx.stroke();
     }
     for (var i = 1; i < lines.y; i++) {
+      setStroke(i);
+
       var y = (pos.y + sizeMinus.y * (i / lines.y)).round() - 0.5;
+      ctx.beginPath();
       ctx.moveTo(pos.x, y);
-      ctx.lineTo(pos.x + sizeMinus.x, y);
+      ctx.lineTo(pos.x + sizeMinus.x - 1, y);
+      ctx.stroke();
     }
-    ctx.closePath();
-    ctx.stroke();
   }
 }

@@ -23,7 +23,7 @@ class Project {
     void parse() {
       var s = e.value;
       var v = int.tryParse(s);
-      if (v != null) {
+      if (v != null && v >= 0) {
         apply(v);
       }
     }
