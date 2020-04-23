@@ -7,6 +7,16 @@ class Project {
   final ImageElement img = querySelector('img');
   Grid _grid;
 
+  double _zoom = 0.25;
+  double get zoom => _zoom;
+  set zoom(double zoom) {
+    _zoom = zoom;
+    redraw();
+  }
+
+  Point<int> get zoomedSize =>
+      Point((img.width * zoom).round(), (img.height * zoom).round());
+
   Project() {
     _grid = Grid(this);
 
@@ -19,8 +29,8 @@ class Project {
   }
 
   void loadImage() {
-    canvas.width = img.width ~/ 4;
-    canvas.height = img.height ~/ 4;
+    canvas.width = zoomedSize.x;
+    canvas.height = zoomedSize.y;
     redraw();
   }
 

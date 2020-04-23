@@ -6,7 +6,7 @@ class Grid {
   final Project project;
   final DivElement el = querySelector('#grid');
 
-  Point<int> _divisions = Point(1, 2);
+  Point<int> _divisions = Point(3, 3);
   Point<int> get divisions => _divisions;
   set divisions(Point<int> divisions) {
     _divisions = divisions;
@@ -24,23 +24,23 @@ class Grid {
   Point<num> get position => _position;
   set position(Point<num> position) {
     _position = position;
-    el.style.left = position.x.toString() + 'px';
-    el.style.top = position.y.toString() + 'px';
+    el.style.left = (project.zoom * position.x).toString() + 'px';
+    el.style.top = (project.zoom * position.y).toString() + 'px';
   }
 
   Point<num> _size;
   Point<num> get size => _size;
   set size(Point<num> size) {
     _size = size;
-    el.style.width = size.x.toString() + 'px';
-    el.style.height = size.y.toString() + 'px';
+    el.style.width = (project.zoom * size.x).toString() + 'px';
+    el.style.height = (project.zoom * size.y).toString() + 'px';
   }
 
-  static const dragSensitivity = 10;
+  static const dragSensitivity = 5; // minimum distance to enable dragging
 
   Grid(this.project) {
-    position = Point(50, 50);
-    size = Point(100, 100);
+    position = Point(200, 200);
+    size = Point(400, 400);
 
     el.onMouseDown.listen((e) {
       var mouse1 = e.client;
@@ -49,7 +49,7 @@ class Grid {
       var subMove = document.onMouseMove.listen((e) {
         if (e.movement.magnitude == 0) return;
 
-        var newPos = pos1 + e.client - mouse1;
+        var newPos = pos1 + (e.client - mouse1) * (1 / project.zoom);
         if (!drag &&
             position.squaredDistanceTo(newPos) >=
                 dragSensitivity * dragSensitivity) {
@@ -71,25 +71,35 @@ class Grid {
   }
 
   void drawOn(CanvasRenderingContext2D ctx) {
-    ctx.fillStyle = '#fff6';
+    var zoom = project.zoom;
+    var position = Point<num>(zoom * this.position.x, zoom * this.position.y);
+    var pos = Point<num>(position.x + 1, position.y + 1);
+    var size = Point<num>(zoom * this.size.x, zoom * this.size.y);
+    var sizeMinus = Point<num>(size.x - 1, size.y - 1);
 
-    ctx.fillRect(position.x, position.y, size.x, size.y);
+    ctx.fillStyle = '#000a';
+
+    ctx.fillRect(0, 0, position.x, project.canvas.height);
+    ctx.fillRect(position.x + size.x, 0,
+        project.canvas.width - size.x - position.x, project.canvas.height);
+    ctx.fillRect(position.x, 0, size.x, position.y);
+    ctx.fillRect(position.x, position.y + size.y, size.x,
+        project.canvas.height - size.y - position.y);
 
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 1;
-    ctx.beginPath();
-
     var lines = Point<int>(divisions.x + 1, divisions.y + 1);
 
+    ctx.beginPath();
     for (var i = 0; i <= lines.x; i++) {
-      var x = position.x + size.x * (i / lines.x) - 0.5;
-      ctx.moveTo(x, position.y);
-      ctx.lineTo(x, position.y + size.y);
+      var x = (pos.x + sizeMinus.x * (i / lines.x)).round() - 0.5;
+      ctx.moveTo(x, pos.y);
+      ctx.lineTo(x, pos.y + sizeMinus.y);
     }
     for (var i = 0; i <= lines.y; i++) {
-      var y = position.y + size.y * (i / lines.y) - 0.5;
-      ctx.moveTo(position.x, y);
-      ctx.lineTo(position.x + size.x, y);
+      var y = (pos.y + sizeMinus.y * (i / lines.y)).round() - 0.5;
+      ctx.moveTo(pos.x, y);
+      ctx.lineTo(pos.x + sizeMinus.x, y);
     }
     ctx.closePath();
     ctx.stroke();
