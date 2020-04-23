@@ -6,6 +6,20 @@ class Grid {
   final Project project;
   final DivElement el = querySelector('#grid');
 
+  String _gridColor = '#fff6';
+  String get gridColor => _gridColor;
+  set gridColor(String gridColor) {
+    _gridColor = gridColor;
+    project.redraw();
+  }
+
+  String _outsideColor = '#000a';
+  String get outsideColor => _outsideColor;
+  set outsideColor(String outsideColor) {
+    _outsideColor = outsideColor;
+    project.redraw();
+  }
+
   Point<int> _divisions = Point(3, 3);
   Point<int> get divisions => _divisions;
   set divisions(Point<int> divisions) {
@@ -77,7 +91,7 @@ class Grid {
     var size = Point<num>(zoom * this.size.x, zoom * this.size.y);
     var sizeMinus = Point<num>(size.x - 1, size.y - 1);
 
-    ctx.fillStyle = '#000a';
+    ctx.fillStyle = outsideColor;
 
     ctx.fillRect(0, 0, position.x, project.canvas.height);
     ctx.fillRect(position.x + size.x, 0,
@@ -86,17 +100,19 @@ class Grid {
     ctx.fillRect(position.x, position.y + size.y, size.x,
         project.canvas.height - size.y - position.y);
 
-    ctx.strokeStyle = '#fff';
+    ctx.strokeStyle = gridColor;
     ctx.lineWidth = 1;
+    ctx.strokeRect(pos.x.round() - 0.5, pos.y.round() - 0.5, size.x, size.y);
+
     var lines = Point<int>(divisions.x + 1, divisions.y + 1);
 
     ctx.beginPath();
-    for (var i = 0; i <= lines.x; i++) {
+    for (var i = 1; i < lines.x; i++) {
       var x = (pos.x + sizeMinus.x * (i / lines.x)).round() - 0.5;
       ctx.moveTo(x, pos.y);
       ctx.lineTo(x, pos.y + sizeMinus.y);
     }
-    for (var i = 0; i <= lines.y; i++) {
+    for (var i = 1; i < lines.y; i++) {
       var y = (pos.y + sizeMinus.y * (i / lines.y)).round() - 0.5;
       ctx.moveTo(pos.x, y);
       ctx.lineTo(pos.x + sizeMinus.x, y);
