@@ -34,17 +34,17 @@ class Grid {
     project.redraw();
   }
 
-  Point<num> _position;
-  Point<num> get position => _position;
-  set position(Point<num> position) {
+  Point<int> _position;
+  Point<int> get position => _position;
+  set position(Point<int> position) {
     _position = position;
     el.style.left = (project.zoom * position.x).toString() + 'px';
     el.style.top = (project.zoom * position.y).toString() + 'px';
   }
 
-  Point<num> _size;
-  Point<num> get size => _size;
-  set size(Point<num> size) {
+  Point<int> _size;
+  Point<int> get size => _size;
+  set size(Point<int> size) {
     _size = size;
     el.style.width = (project.zoom * size.x).toString() + 'px';
     el.style.height = (project.zoom * size.y).toString() + 'px';
@@ -57,21 +57,55 @@ class Grid {
     size = Point(400, 400);
 
     el.onMouseDown.listen((e) {
-      var mouse1 = e.client;
+      void Function(Point<int>, Point<int>, Point<int>) action;
+      if (e.target != el) {
+        var classes = (e.target as HtmlElement).classes;
+        action = (pos1, size1, diff) {
+          var x = pos1.x;
+          var y = pos1.y;
+          var width = size1.x;
+          var height = size1.y;
+
+          if (classes.contains('top')) {
+            y += diff.y;
+            height -= diff.y;
+          }
+          if (classes.contains('right')) {
+            width += diff.x;
+          }
+          if (classes.contains('bottom')) {
+            height += diff.y;
+          }
+          if (classes.contains('left')) {
+            x += diff.x;
+            width -= diff.x;
+          }
+
+          position = Point(x, y);
+          size = Point(width, height);
+        };
+      } else {
+        action = (pos1, size1, diff) {
+          position = pos1 + diff;
+        };
+      }
+
+      var mouse1 = Point<int>(e.client.x, e.client.y);
       var pos1 = position;
+      var size1 = size;
       var drag = false;
       var subMove = document.onMouseMove.listen((e) {
         if (e.movement.magnitude == 0) return;
-
-        var newPos = pos1 + (e.client - mouse1) * (1 / project.zoom);
+        var diff =
+            (Point<int>(e.client.x, e.client.y) - mouse1) * (1 / project.zoom);
         if (!drag &&
-            position.squaredDistanceTo(newPos) >=
+            diff.x * diff.x + diff.y * diff.y >=
                 dragSensitivity * dragSensitivity) {
           drag = true;
         }
 
         if (drag) {
-          position = newPos;
+          action(pos1, size1, diff);
           project.redraw();
         }
       });
@@ -102,7 +136,8 @@ class Grid {
 
     ctx.strokeStyle = gridColor;
     ctx.lineWidth = 1;
-    ctx.strokeRect(pos.x.round() - 0.5, pos.y.round() - 0.5, size.x, size.y);
+    ctx.strokeRect(
+        pos.x.round() - 0.5, pos.y.round() - 0.5, sizeMinus.x, sizeMinus.y);
 
     var lines = Point<int>(divisions.x + 1, divisions.y + 1);
 

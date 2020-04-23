@@ -16,7 +16,17 @@
 <body>
   <img src="jon.png">
 
-  <div id="grid"></div>
+  <div id="grid">
+    <div class="width top" style="cursor: n-resize;"></div>
+    <div class="height right" style="cursor: e-resize;"></div>
+    <div class="width bottom" style="cursor: s-resize;"></div>
+    <div class="height left" style="cursor: w-resize;"></div>
+
+    <div class="corner top right" style="cursor: ne-resize;"></div>
+    <div class="corner bottom right" style="cursor: se-resize;"></div>
+    <div class="corner bottom left" style="cursor: sw-resize;"></div>
+    <div class="corner top left" style="cursor: nw-resize;"></div>
+  </div>
   <canvas></canvas>
 </body>
 

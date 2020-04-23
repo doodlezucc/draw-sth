@@ -12,4 +12,43 @@ img {
 #grid {
   background-color: transparent;
   position: absolute;
+  --resizer-size: 16px;
+  --inset-size: 6px;
+  --inset: -10px;
+  --corner-inset: 10px;
+  --corner-size: calc(var(--resizer-size) + var(--corner-inset) / 2);
+}
+#grid > * {
+  background-color: transparent;
+  position: absolute;
+  width: var(--resizer-size);
+  height: var(--resizer-size);
+  box-sizing: border-box;
+}
+#grid > .width {
+  left: var(--inset-size);
+  right: var(--inset-size);
+  width: auto;
+}
+#grid > .height {
+  top: var(--inset-size);
+  bottom: var(--inset-size);
+  height: auto;
+}
+#grid > .corner {
+  margin: 5px;
+  width: var(--corner-size);
+  height: var(--corner-size);
+}
+#grid > .top {
+  top: var(--inset);
+}
+#grid > .right {
+  right: var(--inset);
+}
+#grid > .bottom {
+  bottom: var(--inset);
+}
+#grid > .left {
+  left: var(--inset);
 }
