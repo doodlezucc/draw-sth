@@ -2,8 +2,14 @@
 
 body {
   font-family: 'Roboto', sans-serif;
+  position: relative;
 }
 
 img {
   display: none;
+}
+
+#grid {
+  background-color: #f00a;
+  position: absolute;
 }
