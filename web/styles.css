@@ -15,8 +15,7 @@ img {
   --resizer-size: 16px;
   --inset-size: 6px;
   --inset: -10px;
-  --corner-inset: 10px;
-  --corner-size: calc(var(--resizer-size) + var(--corner-inset) / 2);
+  --corner-size: calc(var(--resizer-size) + 10px);
 }
 #grid > * {
   background-color: transparent;
@@ -36,7 +35,6 @@ img {
   height: auto;
 }
 #grid > .corner {
-  margin: 5px;
   width: var(--corner-size);
   height: var(--corner-size);
 }
