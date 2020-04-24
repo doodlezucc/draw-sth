@@ -1,6 +1,7 @@
 import 'dart:html';
 import 'dart:math';
 
+import 'io.dart';
 import 'project.dart';
 
 class Grid {
@@ -181,5 +182,18 @@ class Grid {
       ctx.lineTo(pos.x + sizeMinus.x - 1, y);
       ctx.stroke();
     }
+  }
+
+  Map<String, dynamic> toJson() => {
+        'divisions': pointToJson(divisions),
+        'subdivisions': subdivisions,
+        'position': pointToJson(position),
+        'size': pointToJson(size)
+      };
+  void fromJson(Map<String, dynamic> json) {
+    divisions = pointFromJson(json['divisions']);
+    subdivisions = json[subdivisions];
+    position = pointFromJson(json['position']);
+    size = pointFromJson(json['size']);
   }
 }

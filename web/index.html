@@ -17,36 +17,40 @@
   <div class="top-bar">
     <input id="imgUrl" type="url" placeholder="Enter image url...">
     <div class="controls">
-      <div class="control">
-        <label>Divisions</label>
-        <input id="divX" type="number" min="0" value="3">
-        <input id="divY" type="number" min="0" value="3">
+      <div class="section">
+        <div class="control">
+          <label>Divisions</label>
+          <input id="divX" type="number" min="0" value="3">
+          <input id="divY" type="number" min="0" value="3">
+        </div>
+        <div class="control">
+          <label>Subdivisions</label>
+          <input id="subdivisions" type="number" min="0" value="0">
+        </div>
       </div>
-      <div class="control">
-        <label>Subdivisions</label>
-        <input id="subdivisions" type="number" min="0" value="0">
+      <div class="section">
+        <button id="save">Save</button>
+        <button id="load">Upload</button>
       </div>
     </div>
   </div>
 
   <div class="image">
-    <img src="jon.png">
+    <img>
 
-    <div id="transformable">
-      <div id="offset">
-        <div id="grid">
-          <div class="width top" style="cursor: n-resize;"></div>
-          <div class="height right" style="cursor: e-resize;"></div>
-          <div class="width bottom" style="cursor: s-resize;"></div>
-          <div class="height left" style="cursor: w-resize;"></div>
+    <div id="offset">
+      <div id="grid">
+        <div class="width top" style="cursor: n-resize;"></div>
+        <div class="height right" style="cursor: e-resize;"></div>
+        <div class="width bottom" style="cursor: s-resize;"></div>
+        <div class="height left" style="cursor: w-resize;"></div>
 
-          <div class="corner top right" style="cursor: ne-resize;"></div>
-          <div class="corner bottom right" style="cursor: se-resize;"></div>
-          <div class="corner bottom left" style="cursor: sw-resize;"></div>
-          <div class="corner top left" style="cursor: nw-resize;"></div>
-        </div>
-        <canvas></canvas>
+        <div class="corner top right" style="cursor: ne-resize;"></div>
+        <div class="corner bottom right" style="cursor: se-resize;"></div>
+        <div class="corner bottom left" style="cursor: sw-resize;"></div>
+        <div class="corner top left" style="cursor: nw-resize;"></div>
       </div>
+      <canvas></canvas>
     </div>
   </div>
 </body>

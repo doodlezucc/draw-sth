@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:html';
 import 'dart:math';
 
 import 'grid.dart';
+import 'io.dart';
 
 class Project {
   static const zoomSpeed = 50;
@@ -9,8 +11,7 @@ class Project {
   final CanvasElement canvas = querySelector('canvas');
   final ImageElement img = querySelector('img');
   final InputElement urlInput = querySelector('#imgUrl');
-  final DivElement offset = querySelector('#offset');
-  final DivElement transformable = querySelector('#transformable');
+  final DivElement offsetElement = querySelector('#offset');
   Grid _grid;
 
   int _zoomWidth = 500;
@@ -25,13 +26,13 @@ class Project {
   Point<int> get zoomedSize => Point(_zoomWidth, img.height ~/ zoom);
   Point<int> get size => Point(img.width, img.height);
 
-  Point<int> _transform = Point(0, 0);
-  Point<int> get transform => _transform;
-  set transform(Point<int> transform) {
-    _transform = transform;
-    var point = (_transform * (1 / zoom)) - zoomedSize * 0.5;
-    offset.style.left = '${point.x}px';
-    offset.style.top = '${point.y}px';
+  Point<int> _offset = Point(0, 0);
+  Point<int> get offset => _offset;
+  set offset(Point<int> offset) {
+    _offset = offset;
+    var point = (_offset * (1 / zoom)) - zoomedSize * 0.5;
+    offsetElement.style.left = 'calc(50% + ${point.x}px)';
+    offsetElement.style.top = 'calc(50% + ${point.y}px)';
   }
 
   void registerIntInput(InputElement e, void Function(int value) apply,
@@ -55,8 +56,8 @@ class Project {
     });
   }
 
-  void loadUrl(String url) {
-    img.src = url;
+  void setSrc(String src) {
+    img.src = src;
   }
 
   Project() {
@@ -80,7 +81,7 @@ class Project {
 
     urlInput.onKeyDown.listen((e) {
       if (e.keyCode == 13) {
-        loadUrl(urlInput.value);
+        setSrc(urlInput.value);
       }
     });
 
@@ -92,14 +93,14 @@ class Project {
     querySelector('.image').onMouseDown.listen((e) {
       HtmlElement el = e.target;
       if (el.matchesWithAncestors('#grid')) return;
-      var pos1 = transform;
+      var pos1 = offset;
 
       var mouse1 = Point<int>(e.client.x, e.client.y);
       var subMove = document.onMouseMove.listen((e) {
         if (e.movement.magnitude == 0) return;
         var diff = (Point<int>(e.client.x, e.client.y) - mouse1);
 
-        transform = pos1 + diff * zoom;
+        offset = pos1 + diff * zoom;
       });
 
       var subUp;
@@ -108,6 +109,8 @@ class Project {
         subUp.cancel();
       });
     });
+
+    querySelector('#save').onClick.listen((e) => download());
 
     document.onKeyDown.listen((e) {
       if (e.target is! InputElement) {
@@ -130,13 +133,37 @@ class Project {
     });
   }
 
+  Map<String, dynamic> toJson() => {
+        'src': img.src,
+        'offset': pointToJson(offset),
+        'zoomWidth': zoomWidth,
+        'grid': _grid.toJson()
+      };
+  void fromJson(Map<String, dynamic> json) {
+    img.src = json['src'];
+    offset = pointFromJson(json['offset']);
+    _zoomWidth = json[zoomWidth];
+    _grid.fromJson(json['grid']);
+  }
+
+  void download() {
+    var jsonString = toJsonString(this);
+    var aElement = AnchorElement(
+        href:
+            'data:text/json;charset=utf-8,' + Uri.encodeComponent(jsonString));
+    aElement.download = 'draw_sth.json';
+    document.body.append(aElement);
+    aElement.click();
+    aElement.remove();
+  }
+
   void reloadStylesheet() {
     LinkElement cssLink = querySelector('link');
     cssLink.href = cssLink.href;
   }
 
   void initDemo() {
-    setSize();
+    setSrc('jon.png');
   }
 
   void setSize() {
@@ -144,7 +171,7 @@ class Project {
     canvas.height = zoomedSize.y;
     _grid.position = _grid.position;
     _grid.size = _grid.size;
-    transform = transform;
+    offset = offset;
     redraw();
   }
 
