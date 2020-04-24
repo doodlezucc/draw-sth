@@ -17,14 +17,14 @@ class Project {
   int _zoomWidth = 500;
   int get zoomWidth => _zoomWidth;
   set zoomWidth(int zoomWidth) {
-    _zoomWidth = zoomWidth;
+    _zoomWidth = max(50, zoomWidth);
     setSize();
   }
 
   double get zoom => img.width / zoomWidth;
 
-  Point<int> get zoomedSize => Point(_zoomWidth, img.height ~/ zoom);
-  Point<int> get size => Point(img.width, img.height);
+  Point get zoomedSize => Point(_zoomWidth, img.height / zoom);
+  Point get size => Point(img.width, img.height);
 
   Point _offset = Point(0, 0);
   Point get offset => _offset;
@@ -57,6 +57,16 @@ class Project {
   }
 
   void setSrc(String src) {
+    var sub;
+    sub = img.onLoad.listen((e) {
+      sub.cancel();
+      _grid.immediateClamp();
+      setSize();
+      offset = Point(0, 0);
+      var rect = querySelector('.image').client;
+      var width = (img.width / img.height) * rect.height;
+      zoomWidth = (width < rect.width ? width : rect.width).round();
+    });
     img.src = src;
   }
 
@@ -175,17 +185,12 @@ class Project {
   }
 
   void initDemo() {
-    img.src = 'jon.png';
-    var sub;
-    sub = img.onLoad.listen((e) {
-      sub.cancel();
-      setSize();
-    });
+    setSrc('jon.png');
   }
 
   void setSize() {
-    canvas.width = zoomedSize.x;
-    canvas.height = zoomedSize.y;
+    canvas.width = zoomedSize.x.round();
+    canvas.height = zoomedSize.y.round();
     _grid.position = _grid.position;
     _grid.size = _grid.size;
     offset = offset;

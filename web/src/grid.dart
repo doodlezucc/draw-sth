@@ -59,6 +59,13 @@ class Grid {
     el.style.height = (_size.y / project.zoom).toString() + 'px';
   }
 
+  static const minSize = Point<int>(50, 50);
+
+  void immediateClamp() {
+    size = clamp(size, minSize, project.size);
+    position = clamp(position, Point(0, 0), project.size - size);
+  }
+
   static const dragSensitivity = 0; // minimum distance to enable dragging
 
   Grid(this.project) {
@@ -70,9 +77,8 @@ class Grid {
       var size1 = size;
 
       var diffPosMin = pos1 * -1;
-      var minSize = Point(50, 50);
       var diffPosMax = size1 - minSize;
-      var diffSizeMin = minSize - size1;
+      var diffSizeMin = Point<num>(minSize.x, minSize.y) - size1;
       var diffSizeMax = project.size - (pos1 + size1);
 
       void Function(Point<int>) action;
@@ -85,18 +91,18 @@ class Grid {
           var height = size1.y;
 
           if (classes.contains('top')) {
-            var v = min<int>(max(diff.y, diffPosMin.y), diffPosMax.y);
+            var v = min(max(diff.y, diffPosMin.y), diffPosMax.y);
             y += v;
             height -= v;
           }
           if (classes.contains('right')) {
-            width += min<int>(max(diff.x, diffSizeMin.x), diffSizeMax.x);
+            width += min(max(diff.x, diffSizeMin.x), diffSizeMax.x);
           }
           if (classes.contains('bottom')) {
-            height += min<int>(max(diff.y, diffSizeMin.y), diffSizeMax.y);
+            height += min(max(diff.y, diffSizeMin.y), diffSizeMax.y);
           }
           if (classes.contains('left')) {
-            var v = min<int>(max(diff.x, diffPosMin.x), diffPosMax.x);
+            var v = min(max(diff.x, diffPosMin.x), diffPosMax.x);
             x += v;
             width -= v;
           }
