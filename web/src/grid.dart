@@ -36,9 +36,9 @@ class Grid {
     _subdivisions = subdivisions;
   }
 
-  Point<int> _position;
-  Point<int> get position => _position;
-  set position(Point<int> position) {
+  Point _position;
+  Point get position => _position;
+  set position(Point position) {
     _position = position;
     el.style.left = (_position.x / project.zoom).toString() + 'px';
     el.style.top = (_position.y / project.zoom).toString() + 'px';
@@ -51,9 +51,9 @@ class Grid {
         min(max(point.y, pMin.y), pMax.y + inset));
   }
 
-  Point<int> _size;
-  Point<int> get size => _size;
-  set size(Point<int> size) {
+  Point _size;
+  Point get size => _size;
+  set size(Point size) {
     _size = size;
     el.style.width = (_size.x / project.zoom).toString() + 'px';
     el.style.height = (_size.y / project.zoom).toString() + 'px';
@@ -192,7 +192,7 @@ class Grid {
       };
   void fromJson(Map<String, dynamic> json) {
     divisions = pointFromJson(json['divisions']);
-    subdivisions = json[subdivisions];
+    subdivisions = json['subdivisions'];
     position = pointFromJson(json['position']);
     size = pointFromJson(json['size']);
   }

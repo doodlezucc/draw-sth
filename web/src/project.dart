@@ -26,9 +26,9 @@ class Project {
   Point<int> get zoomedSize => Point(_zoomWidth, img.height ~/ zoom);
   Point<int> get size => Point(img.width, img.height);
 
-  Point<int> _offset = Point(0, 0);
-  Point<int> get offset => _offset;
-  set offset(Point<int> offset) {
+  Point _offset = Point(0, 0);
+  Point get offset => _offset;
+  set offset(Point offset) {
     _offset = offset;
     var point = (_offset * (1 / zoom)) - zoomedSize * 0.5;
     offsetElement.style.left = 'calc(50% + ${point.x}px)';
@@ -85,11 +85,6 @@ class Project {
       }
     });
 
-    img.onLoad.listen((e) {
-      print('Loaded image!');
-      setSize();
-    });
-
     querySelector('.image').onMouseDown.listen((e) {
       HtmlElement el = e.target;
       if (el.matchesWithAncestors('#grid')) return;
@@ -111,6 +106,18 @@ class Project {
     });
 
     querySelector('#save').onClick.listen((e) => download());
+    InputElement fileInput = querySelector('#upload');
+    fileInput.onChange.listen((e) {
+      var file = fileInput.files[0];
+      if (file != null) {
+        var reader = FileReader();
+        reader.onLoad.listen((e) {
+          String jsonString = (e.target as dynamic).result;
+          fromJson(json.decode(jsonString));
+        });
+        reader.readAsText(file);
+      }
+    });
 
     document.onKeyDown.listen((e) {
       if (e.target is! InputElement) {
@@ -141,9 +148,14 @@ class Project {
       };
   void fromJson(Map<String, dynamic> json) {
     img.src = json['src'];
-    offset = pointFromJson(json['offset']);
-    _zoomWidth = json[zoomWidth];
-    _grid.fromJson(json['grid']);
+    var sub;
+    sub = img.onLoad.listen((e) {
+      sub.cancel();
+      _offset = pointFromJson(json['offset']);
+      _zoomWidth = json['zoomWidth'];
+      _grid.fromJson(json['grid']);
+      setSize();
+    });
   }
 
   void download() {
@@ -163,7 +175,12 @@ class Project {
   }
 
   void initDemo() {
-    setSrc('jon.png');
+    img.src = 'jon.png';
+    var sub;
+    sub = img.onLoad.listen((e) {
+      sub.cancel();
+      setSize();
+    });
   }
 
   void setSize() {
