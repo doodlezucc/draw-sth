@@ -27,80 +27,93 @@ class Grid {
   Point<int> get divisions => _divisions;
   set divisions(Point<int> divisions) {
     _divisions = divisions;
-    project.redraw();
   }
 
   int _subdivisions = 2;
   int get subdivisions => _subdivisions;
   set subdivisions(int subdivisions) {
     _subdivisions = subdivisions;
-    project.redraw();
   }
 
   Point<int> _position;
   Point<int> get position => _position;
   set position(Point<int> position) {
     _position = position;
-    el.style.left = (project.zoom * position.x).toString() + 'px';
-    el.style.top = (project.zoom * position.y).toString() + 'px';
+    el.style.left = (_position.x / project.zoom).toString() + 'px';
+    el.style.top = (_position.y / project.zoom).toString() + 'px';
+  }
+
+  static Point<T> clamp<T extends num>(
+      Point<T> point, Point<T> pMin, Point<T> pMax,
+      [num inset = 0]) {
+    return Point<T>(min(max(point.x, pMin.x), pMax.x + inset),
+        min(max(point.y, pMin.y), pMax.y + inset));
   }
 
   Point<int> _size;
   Point<int> get size => _size;
   set size(Point<int> size) {
     _size = size;
-    el.style.width = (project.zoom * size.x).toString() + 'px';
-    el.style.height = (project.zoom * size.y).toString() + 'px';
+    el.style.width = (_size.x / project.zoom).toString() + 'px';
+    el.style.height = (_size.y / project.zoom).toString() + 'px';
   }
 
-  static const dragSensitivity = 5; // minimum distance to enable dragging
+  static const dragSensitivity = 0; // minimum distance to enable dragging
 
   Grid(this.project) {
-    position = Point(200, 200);
-    size = Point(400, 400);
+    _position = Point(200, 200);
+    _size = Point(400, 400);
 
     el.onMouseDown.listen((e) {
-      void Function(Point<int>, Point<int>, Point<int>) action;
+      var pos1 = position;
+      var size1 = size;
+
+      var diffPosMin = pos1 * -1;
+      var minSize = Point(50, 50);
+      var diffPosMax = size1 - minSize;
+      var diffSizeMin = minSize - size1;
+      var diffSizeMax = project.size - (pos1 + size1);
+
+      void Function(Point<int>) action;
       if (e.target != el) {
         var classes = (e.target as HtmlElement).classes;
-        action = (pos1, size1, diff) {
+        action = (diff) {
           var x = pos1.x;
           var y = pos1.y;
           var width = size1.x;
           var height = size1.y;
 
           if (classes.contains('top')) {
-            y += diff.y;
-            height -= diff.y;
+            var v = min<int>(max(diff.y, diffPosMin.y), diffPosMax.y);
+            y += v;
+            height -= v;
           }
           if (classes.contains('right')) {
-            width += diff.x;
+            width += min<int>(max(diff.x, diffSizeMin.x), diffSizeMax.x);
           }
           if (classes.contains('bottom')) {
-            height += diff.y;
+            height += min<int>(max(diff.y, diffSizeMin.y), diffSizeMax.y);
           }
           if (classes.contains('left')) {
-            x += diff.x;
-            width -= diff.x;
+            var v = min<int>(max(diff.x, diffPosMin.x), diffPosMax.x);
+            x += v;
+            width -= v;
           }
 
-          position = Point(x, y);
           size = Point(width, height);
+          position = Point(x, y);
         };
       } else {
-        action = (pos1, size1, diff) {
-          position = pos1 + diff;
+        action = (diff) {
+          position = clamp(pos1 + diff, Point(0, 0), project.size - size1);
         };
       }
 
       var mouse1 = Point<int>(e.client.x, e.client.y);
-      var pos1 = position;
-      var size1 = size;
       var drag = false;
       var subMove = document.onMouseMove.listen((e) {
         if (e.movement.magnitude == 0) return;
-        var diff =
-            (Point<int>(e.client.x, e.client.y) - mouse1) * (1 / project.zoom);
+        var diff = (Point<int>(e.client.x, e.client.y) - mouse1) * project.zoom;
         if (!drag &&
             diff.x * diff.x + diff.y * diff.y >=
                 dragSensitivity * dragSensitivity) {
@@ -108,7 +121,7 @@ class Grid {
         }
 
         if (drag) {
-          action(pos1, size1, diff);
+          action(diff);
           project.redraw();
         }
       });
@@ -123,10 +136,10 @@ class Grid {
 
   void drawOn(CanvasRenderingContext2D ctx) {
     var zoom = project.zoom;
-    var position = Point<num>(zoom * this.position.x, zoom * this.position.y);
-    var pos = Point<num>(position.x + 1, position.y + 1);
-    var size = Point<num>(zoom * this.size.x, zoom * this.size.y);
-    var sizeMinus = Point<num>(size.x - 1, size.y - 1);
+    var position = Point<int>(this.position.x ~/ zoom, this.position.y ~/ zoom);
+    var pos = Point<int>(position.x + 1, position.y + 1);
+    var size = Point<int>(this.size.x ~/ zoom + 1, this.size.y ~/ zoom + 1);
+    var sizeMinus = Point<int>(size.x - 1, size.y - 1);
 
     ctx.fillStyle = outsideColor;
 
