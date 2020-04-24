@@ -202,8 +202,16 @@ class Project {
   }
 
   void redraw() {
-    var ctx = canvas.context2D;
+    var ctx = canvas.context2D
+      ..imageSmoothingEnabled = false
+      ..imageSmoothingQuality = 'low';
+
     ctx.drawImageScaled(img, 0, 0, canvas.width, canvas.height);
+    // var src = Rectangle.fromPoints(_grid.position, _grid.position + _grid.size);
+    // var margin = 100;
+    // var dest = Rectangle.fromPoints(_grid.position * (1 / zoom),
+    //     (_grid.position + _grid.size) * (1 / zoom));
+    // var margin2 = margin / zoom;
     _grid.drawOn(ctx);
   }
 }

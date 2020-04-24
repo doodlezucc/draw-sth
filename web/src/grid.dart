@@ -8,16 +8,7 @@ class Grid {
   final Project project;
   final DivElement el = querySelector('#grid');
 
-  String _gridColor = '#fff9';
-  String get gridColor => _gridColor;
-  set gridColor(String gridColor) {
-    _gridColor = gridColor;
-    project.redraw();
-  }
-
-  String get subGridColor => '#ccc4';
-
-  String _outsideColor = '#000a';
+  String _outsideColor = '#000c';
   String get outsideColor => _outsideColor;
   set outsideColor(String outsideColor) {
     _outsideColor = outsideColor;
@@ -150,43 +141,46 @@ class Grid {
 
     ctx.fillStyle = outsideColor;
 
-    ctx.fillRect(0, 0, position.x, project.canvas.height);
+    ctx.fillRect(0, 0, position.x, project.zoomedSize.y);
     ctx.fillRect(position.x + size.x, 0,
-        project.canvas.width - size.x - position.x, project.canvas.height);
+        project.zoomedSize.x - size.x - position.x, project.zoomedSize.y);
     ctx.fillRect(position.x, 0, size.x, position.y);
     ctx.fillRect(position.x, position.y + size.y, size.x,
-        project.canvas.height - size.y - position.y);
+        project.zoomedSize.y - size.y - position.y);
 
-    ctx.strokeStyle = gridColor;
-    ctx.lineWidth = 1;
+    void invert(Point<int> start, Point<int> size, bool solid) {
+      var d = ctx.getImageData(start.x, start.y, size.x, size.y);
+      for (var i = 0; i < d.data.length; i += 4) {
+        var luminance = (0.2126 * d.data[i] +
+                0.7152 * d.data[i + 1] +
+                0.0722 * d.data[i + 2]) /
+            255;
+        var v = ((0.8 - 2 * luminance.round()) * (solid ? 120 : 30)).floor();
+        d.data[i] += v;
+        d.data[i + 1] += v;
+        d.data[i + 2] += v;
+      }
+      ctx.putImageData(d, start.x, start.y);
+    }
+
+    ctx.strokeStyle = '#fff';
     ctx.strokeRect(
         pos.x.round() - 0.5, pos.y.round() - 0.5, sizeMinus.x, sizeMinus.y);
 
     var lines = Point<int>((divisions.x + 1) * pow(2, subdivisions),
         (divisions.y + 1) * pow(2, subdivisions));
 
-    void setStroke(int i) {
-      ctx.strokeStyle =
-          i % (pow(2, subdivisions)) == 0 ? gridColor : subGridColor;
+    bool isSolid(int i) {
+      return i % (pow(2, subdivisions)) == 0;
     }
 
     for (var i = 1; i < lines.x; i++) {
-      setStroke(i);
-
-      var x = (pos.x + sizeMinus.x * (i / lines.x)).round() - 0.5;
-      ctx.beginPath();
-      ctx.moveTo(x, pos.y);
-      ctx.lineTo(x, pos.y + sizeMinus.y - 1);
-      ctx.stroke();
+      var x = (pos.x + sizeMinus.x * (i / lines.x)).round();
+      invert(Point(x, pos.y), Point(1, sizeMinus.y - 1), isSolid(i));
     }
     for (var i = 1; i < lines.y; i++) {
-      setStroke(i);
-
-      var y = (pos.y + sizeMinus.y * (i / lines.y)).round() - 0.5;
-      ctx.beginPath();
-      ctx.moveTo(pos.x, y);
-      ctx.lineTo(pos.x + sizeMinus.x - 1, y);
-      ctx.stroke();
+      var y = (pos.y + sizeMinus.y * (i / lines.y)).round();
+      invert(Point(pos.x, y), Point(sizeMinus.x - 1, 1), isSolid(i));
     }
   }
 
