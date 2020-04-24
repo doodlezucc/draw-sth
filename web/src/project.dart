@@ -9,6 +9,8 @@ class Project {
   final CanvasElement canvas = querySelector('canvas');
   final ImageElement img = querySelector('img');
   final InputElement urlInput = querySelector('#imgUrl');
+  final DivElement offset = querySelector('#offset');
+  final DivElement transformable = querySelector('#transformable');
   Grid _grid;
 
   int _zoomWidth = 500;
@@ -22,6 +24,15 @@ class Project {
 
   Point<int> get zoomedSize => Point(_zoomWidth, img.height ~/ zoom);
   Point<int> get size => Point(img.width, img.height);
+
+  Point<int> _transform = Point(0, 0);
+  Point<int> get transform => _transform;
+  set transform(Point<int> transform) {
+    _transform = transform;
+    var point = (_transform * (1 / zoom)) - zoomedSize * 0.5;
+    offset.style.left = '${point.x}px';
+    offset.style.top = '${point.y}px';
+  }
 
   void registerIntInput(InputElement e, void Function(int value) apply,
       void Function(int value) bonus, int Function() applyBackwards) {
@@ -78,6 +89,26 @@ class Project {
       setSize();
     });
 
+    querySelector('.image').onMouseDown.listen((e) {
+      HtmlElement el = e.target;
+      if (el.matchesWithAncestors('#grid')) return;
+      var pos1 = transform;
+
+      var mouse1 = Point<int>(e.client.x, e.client.y);
+      var subMove = document.onMouseMove.listen((e) {
+        if (e.movement.magnitude == 0) return;
+        var diff = (Point<int>(e.client.x, e.client.y) - mouse1);
+
+        transform = pos1 + diff * zoom;
+      });
+
+      var subUp;
+      subUp = document.onMouseUp.listen((e) {
+        subMove.cancel();
+        subUp.cancel();
+      });
+    });
+
     document.onKeyDown.listen((e) {
       if (e.target is! InputElement) {
         if (e.shiftKey) {
@@ -113,6 +144,7 @@ class Project {
     canvas.height = zoomedSize.y;
     _grid.position = _grid.position;
     _grid.size = _grid.size;
+    transform = transform;
     redraw();
   }
 
