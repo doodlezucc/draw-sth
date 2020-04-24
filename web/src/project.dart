@@ -148,6 +148,10 @@ class Project {
         }
       }
     });
+
+    document.onMouseWheel.listen((e) {
+      zoomWidth -= zoomSpeed * min(max(e.deltaY, -1), 1);
+    });
   }
 
   Map<String, dynamic> toJson() => {
