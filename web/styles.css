@@ -46,6 +46,7 @@ body {
 .control {
   display: inline-flex;
   flex-direction: row;
+  align-items: center;
 }
 
 .control > label {
@@ -71,15 +72,17 @@ input, button, .btn {
 }
 
 input {
-  width: 200px;
   padding: 2px 5px;
   border: none;
 }
 input[type=number] {
-  width: 50px;
+  width: 75px;
 }
 input[type=file] {
   display: none;
+}
+input[type=url] {
+  width: 200px;
 }
 
 button, .btn {

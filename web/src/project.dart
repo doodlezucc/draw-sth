@@ -13,6 +13,9 @@ class Project {
   final InputElement urlInput = querySelector('#imgUrl');
   final DivElement offsetElement = querySelector('#offset');
   final DivElement editor = querySelector('.image');
+  final InputElement ratioCheckbox = querySelector('#keepRatio');
+  final InputElement cellX = querySelector('#cellX');
+  final InputElement cellY = querySelector('#cellY');
   Grid _grid;
 
   bool _lockGrid = false;
@@ -20,6 +23,8 @@ class Project {
   set lockGrid(bool lockGrid) {
     _lockGrid = lockGrid;
   }
+
+  bool get keepRatio => ratioCheckbox.checked;
 
   int _zoomWidth = 500;
   int get zoomWidth => _zoomWidth;
@@ -42,13 +47,15 @@ class Project {
     offsetElement.style.top = 'calc(50% + ${point.y}px)';
   }
 
-  void registerIntInput(InputElement e, void Function(double value) apply,
-      double Function() applyBackwards) {
+  void registerIntInput(
+      InputElement e,
+      void Function(double value, bool bonus) apply,
+      String Function() applyBackwards) {
     void parse(bool executeBonus) {
       var s = e.value;
       var v = double.tryParse(s);
       if (v != null && v >= 0) {
-        apply(v);
+        apply(v, executeBonus);
         if (executeBonus) redraw();
       }
     }
@@ -59,7 +66,7 @@ class Project {
     parse(false);
 
     e.onBlur.listen((ev) {
-      e.value = applyBackwards().toString();
+      e.value = applyBackwards();
     });
   }
 
@@ -77,21 +84,42 @@ class Project {
     img.src = src;
   }
 
+  void applyCellSize(bool x, bool y) {
+    if (x) cellX.value = _grid.cellSize.x.toStringAsFixed(1);
+    if (y) cellY.value = _grid.cellSize.y.toStringAsFixed(1);
+  }
+
   Project() {
     _grid = Grid(this);
 
-    registerIntInput(
-        querySelector('#cellX'),
-        (v) => _grid.cellSize = Point(v, _grid.cellSize.y),
-        () => _grid.cellSize.x);
-    registerIntInput(
-        querySelector('#cellY'),
-        (v) => _grid.cellSize = Point(_grid.cellSize.x, v),
-        () => _grid.cellSize.y);
+    registerIntInput(cellX, (v, bonus) {
+      if (v < 25 || !bonus) return;
+      _grid.cellSize =
+          Point(v, _grid.cellSize.y * (keepRatio ? v / _grid.cellSize.x : 1));
+      applyCellSize(false, true);
+    }, () {
+      applyCellSize(true, false);
+      _grid.cellSize = Point(
+          _grid.cellSize.x.roundToDouble(), _grid.cellSize.y.roundToDouble());
+      return _grid.cellSize.x.toStringAsFixed(1);
+    });
+    registerIntInput(cellY, (v, bonus) {
+      if (v < 25 || !bonus) return;
+      _grid.cellSize =
+          Point(_grid.cellSize.x * (keepRatio ? v / _grid.cellSize.y : 1), v);
+      applyCellSize(true, false);
+    }, () {
+      applyCellSize(true, true);
+      _grid.cellSize = Point(
+          _grid.cellSize.x.roundToDouble(), _grid.cellSize.y.roundToDouble());
+      return _grid.cellSize.y.toStringAsFixed(1);
+    });
+    ratioCheckbox.checked = true;
+    applyCellSize(true, true);
     registerIntInput(
         querySelector('#subdivisions'),
-        (v) => _grid.subdivisions = v.round(),
-        () => _grid.subdivisions.toDouble());
+        (v, bonus) => _grid.subdivisions = v.round(),
+        () => _grid.subdivisions.toString());
 
     urlInput.onKeyDown.listen((e) {
       if (e.keyCode == 13) {

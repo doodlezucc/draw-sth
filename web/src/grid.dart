@@ -60,10 +60,10 @@ class Grid {
     el.style.height = (_size.y / project.zoom).toString() + 'px';
   }
 
-  Point<double> _cellSize = Point<double>(50, 100);
+  Point<double> _cellSize = Point<double>(50, 50);
   Point<double> get cellSize => _cellSize;
   set cellSize(Point<double> size) {
-    _cellSize = clampMin(size, Point(10, 10));
+    _cellSize = clampMin(size, Point(25, 25));
     fit();
   }
 
