@@ -102,18 +102,18 @@ class Grid {
           var height = size1.y;
 
           if (classes.contains('top')) {
-            var v = min(max(diff.y, diffPosMin.y), diffPosMax.y);
+            var v = diff.y;
             y += v;
             height -= v;
           }
           if (classes.contains('right')) {
-            width += min(max(diff.x, diffSizeMin.x), diffSizeMax.x);
+            width += diff.x;
           }
           if (classes.contains('bottom')) {
-            height += min(max(diff.y, diffSizeMin.y), diffSizeMax.y);
+            height += diff.y;
           }
           if (classes.contains('left')) {
-            var v = min(max(diff.x, diffPosMin.x), diffPosMax.x);
+            var v = diff.x;
             x += v;
             width -= v;
           }
@@ -125,7 +125,8 @@ class Grid {
         var diffMax = Point<double>(project.size.x, project.size.y) - size1;
 
         action = (diff) {
-          position = clamp<double>(pos1 + diff, Point(0, 0), diffMax);
+          //position = clamp<double>(pos1 + diff, Point(0, 0), diffMax);
+          position = pos1 + diff;
         };
       }
 
