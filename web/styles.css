@@ -106,6 +106,7 @@ canvas {
 }
 #grid > .top {
   top: var(--inset);
+  display: none;
 }
 #grid > .right {
   right: var(--inset);
@@ -115,4 +116,5 @@ canvas {
 }
 #grid > .left {
   left: var(--inset);
+  display: none;
 }

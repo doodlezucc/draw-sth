@@ -9,12 +9,12 @@ class Grid {
   final DivElement el = querySelector('#grid');
 
   String _gridColor = '#fff';
-  String get gridColor => _gridColor + 'b';
+  String get gridColor => _gridColor + '6';
   set gridColor(String gridColor) {
     _gridColor = gridColor;
   }
 
-  String get subGridColor => _gridColor + '3';
+  String get subGridColor => _gridColor + '2';
 
   String _outsideColor = '#000c';
   String get outsideColor => _outsideColor;
@@ -23,25 +23,15 @@ class Grid {
     project.redraw();
   }
 
-  Point<int> _array = Point(3, 3);
-  Point<int> get array => _array;
-  Point<int> get arrayPlus => _array + const Point(1, 1);
-  set array(Point<int> array) {
-    _array = array;
-    (querySelector('#arrX') as InputElement).value = array.x.toString();
-    (querySelector('#arrY') as InputElement).value = array.y.toString();
-    _recalculateElementSize();
-  }
-
   int _subdivisions = 2;
   int get subdivisions => _subdivisions;
   set subdivisions(int subdivisions) {
     _subdivisions = subdivisions;
   }
 
-  Point _position;
-  Point get position => _position;
-  set position(Point position) {
+  Point<double> _position = Point(50, 50);
+  Point<double> get position => _position;
+  set position(Point<double> position) {
     _position = position;
     el.style.left = (_position.x / project.zoom).toString() + 'px';
     el.style.top = (_position.y / project.zoom).toString() + 'px';
@@ -54,147 +44,97 @@ class Grid {
         min(max(point.y, pMin.y), pMax.y + inset));
   }
 
-  Point _size;
-  Point get size => _size;
-  set size(Point size) {
+  static Point<T> clampMin<T extends num>(Point<T> point, Point<T> pMin) {
+    return Point<T>(max(point.x, pMin.x), max(point.y, pMin.y));
+  }
+
+  Point<double> _size = Point(400, 400);
+  Point<double> get size => _size;
+  set size(Point<double> size) {
     _size = size;
     _recalculateElementSize();
   }
 
   void _recalculateElementSize() {
-    el.style.width = ((_size.x * arrayPlus.x) / project.zoom).toString() + 'px';
-    el.style.height =
-        ((_size.y * arrayPlus.y) / project.zoom).toString() + 'px';
+    el.style.width = (_size.x / project.zoom).toString() + 'px';
+    el.style.height = (_size.y / project.zoom).toString() + 'px';
   }
 
-  static const minSize = Point(50.0, 50.0);
+  Point<double> _cellSize = Point<double>(50, 100);
+  Point<double> get cellSize => _cellSize;
+  set cellSize(Point<double> size) {
+    _cellSize = clampMin(size, Point(10, 10));
+  }
+
+  void fit() {
+    size = Point((size.x / cellSize.x).round() * cellSize.x,
+        (size.y / cellSize.y).round() * cellSize.y);
+  }
+
+  Point get minSize => cellSize;
 
   void immediateClamp() {
-    size = clamp(size, minSize, project.size);
+    size = clamp(size, minSize, Point<double>(project.size.x, project.size.y));
     position = clamp(position, Point(0, 0),
-        project.size - Point(size.x * arrayPlus.x, size.y * arrayPlus.y));
+        Point<double>(project.size.x, project.size.y) - size);
   }
 
   static const dragSensitivity = 0; // minimum distance to enable dragging
 
   Grid(this.project) {
-    _position = Point(200, 200);
-    _size = Point(100, 100);
-
     el.onMouseDown.listen((e) {
       var pos1 = position;
       var size1 = size;
-      var arr1 = array;
 
-      void Function(Point<int>) action;
+      void Function(Point<double>) action;
       if (e.target != el) {
         var classes = (e.target as HtmlElement).classes;
-        if (e.shiftKey) {
-          var diffPosMax = arr1;
-          var diffSizeMin = arr1 * -1;
 
-          action = (diff) {
-            diff = Point<int>(diff.x ~/ size.x, diff.y ~/ size.y);
-            var x = pos1.x;
-            var y = pos1.y;
-            var width = arr1.x;
-            var height = arr1.y;
-
-            if (classes.contains('top')) {
-              var v = min(diff.y, diffPosMax.y);
-              y += v * size.y;
-              height -= v;
-            }
-            if (classes.contains('right')) {
-              width += max(diff.x, diffSizeMin.x);
-            }
-            if (classes.contains('bottom')) {
-              height += max(diff.y, diffSizeMin.y);
-            }
-            if (classes.contains('left')) {
-              var v = min(diff.x, diffPosMax.x);
-              x += v * size.x;
-              width -= v;
-            }
-
-            array = Point(width, height);
-            position = Point(x, y);
-          };
-        } else {
-          var p = Point(size1.x * arrayPlus.x, size1.y * arrayPlus.y);
-
-          var diffPosMin = pos1 * -1;
-          var diffPosMax = p - Point<num>(minSize.x, minSize.y);
-          var diffSizeMin = Point<num>(minSize.x, minSize.y) - p;
-          var diffSizeMax = project.size - (pos1 + p);
-
-          action = (diff) {
-            var x = pos1.x;
-            var y = pos1.y;
-            var width = size1.x;
-            var height = size1.y;
-
-            if (classes.contains('corner')) {
-              if (classes.contains('top')) {
-                if (classes.contains('right')) {
-                  diff = diff.x > -diff.y
-                      ? Point(diff.x, -diff.x)
-                      : Point(-diff.y, diff.y);
-                } else {
-                  diff = -diff.x > -diff.y
-                      ? Point(diff.x, diff.x)
-                      : Point(diff.y, diff.y);
-                }
-              } else {
-                if (classes.contains('right')) {
-                  diff = diff.x > diff.y
-                      ? Point(diff.x, diff.x)
-                      : Point(diff.y, diff.y);
-                } else {
-                  diff = -diff.x > diff.y
-                      ? Point(diff.x, -diff.x)
-                      : Point(-diff.y, diff.y);
-                }
-              }
-            }
-
-            if (classes.contains('top')) {
-              var v = min(max(diff.y, diffPosMin.y), diffPosMax.y);
-              y += v;
-              height -= v / arrayPlus.y;
-            }
-            if (classes.contains('right')) {
-              width +=
-                  min(max(diff.x, diffSizeMin.x), diffSizeMax.x) / arrayPlus.x;
-            }
-            if (classes.contains('bottom')) {
-              height +=
-                  min(max(diff.y, diffSizeMin.y), diffSizeMax.y) / arrayPlus.y;
-            }
-            if (classes.contains('left')) {
-              var v = min(max(diff.x, diffPosMin.x), diffPosMax.x);
-              x += v;
-              width -= v / arrayPlus.x;
-            }
-
-            size = Point(width, height);
-            position = Point(x, y);
-          };
-        }
-      } else {
-        var diffMax =
-            project.size - Point(size1.x * arrayPlus.x, size1.y * arrayPlus.y);
+        var diffPosMin = pos1 * -1;
+        var diffPosMax = size1 - minSize;
+        var diffSizeMin = minSize - size1;
+        var diffSizeMax = project.size - size1 - pos1;
 
         action = (diff) {
-          position = clamp(pos1 + diff, Point(0, 0), diffMax);
+          var x = pos1.x;
+          var y = pos1.y;
+          var width = size1.x;
+          var height = size1.y;
+
+          if (classes.contains('top')) {
+            var v = min(max(diff.y, diffPosMin.y), diffPosMax.y);
+            y += v;
+            height -= v;
+          }
+          if (classes.contains('right')) {
+            width += min(max(diff.x, diffSizeMin.x), diffSizeMax.x);
+          }
+          if (classes.contains('bottom')) {
+            height += min(max(diff.y, diffSizeMin.y), diffSizeMax.y);
+          }
+          if (classes.contains('left')) {
+            var v = min(max(diff.x, diffPosMin.x), diffPosMax.x);
+            x += v;
+            width -= v;
+          }
+
+          size = Point(width, height);
+          position = Point(x, y);
+        };
+      } else {
+        var diffMax = Point<double>(project.size.x, project.size.y) - size1;
+
+        action = (diff) {
+          position = clamp<double>(pos1 + diff, Point(0, 0), diffMax);
         };
       }
 
-      var mouse1 = Point<int>(e.client.x, e.client.y);
+      var mouse1 = Point<double>(e.client.x, e.client.y);
       var drag = false;
       var subMove = document.onMouseMove.listen((e) {
         if (e.movement.magnitude == 0) return;
-        var diff = (Point<int>(e.client.x, e.client.y) - mouse1) * project.zoom;
+        var diff =
+            (Point<double>(e.client.x, e.client.y) - mouse1) * project.zoom;
         if (!drag &&
             diff.x * diff.x + diff.y * diff.y >=
                 dragSensitivity * dragSensitivity) {
@@ -211,6 +151,8 @@ class Grid {
       subUp = document.onMouseUp.listen((e) {
         subMove.cancel();
         subUp.cancel();
+        fit();
+        project.redraw();
       });
     });
   }
@@ -224,8 +166,7 @@ class Grid {
     var position = round(
         rect.topLeft + Point(this.position.x / zoom, this.position.y / zoom));
     var pos = Point<int>(position.x + 1, position.y + 1);
-    var size = Point<int>(arrayPlus.x * this.size.x ~/ zoom + 1,
-        arrayPlus.y * this.size.y ~/ zoom + 1);
+    var size = Point<int>(this.size.x ~/ zoom + 1, this.size.y ~/ zoom + 1);
     var sizeMinus = Point<int>(size.x - 1, size.y - 1);
 
     ctx.fillStyle = outsideColor;
@@ -241,56 +182,51 @@ class Grid {
     ctx.strokeRect(
         pos.x.round() - 0.5, pos.y.round() - 0.5, size.x - 1, size.y - 1);
 
-    for (var i = 1; i <= arrayPlus.x; i++) {
-      ctx.strokeStyle = gridColor;
-
-      var x = (pos.x + this.size.x * i / zoom).round() - 0.5;
+    void stroke(num x1, num y1, num x2, num y2) {
       ctx.beginPath();
-      ctx.moveTo(x, pos.y);
-      ctx.lineTo(x, pos.y + sizeMinus.y - 1);
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
       ctx.stroke();
+    }
 
+    var subdiv = pow(2, subdivisions) - 1;
+
+    for (var i = 1; i <= this.size.x / cellSize.x; i++) {
+      var x = (pos.x + cellSize.x * i / zoom).round() - 0.5;
+      if (i < this.size.x / cellSize.x) {
+        ctx.strokeStyle = gridColor;
+        stroke(x, pos.y, x, pos.y + sizeMinus.y);
+      }
       ctx.strokeStyle = subGridColor;
-      for (var sub = 0; sub < subdivisions; sub++) {
-        var x1 = (x - (this.size.x * (sub + 1) / (subdivisions + 1)) / zoom)
-                .round() -
-            0.5;
-        ctx.beginPath();
-        ctx.moveTo(x1, pos.y);
-        ctx.lineTo(x1, pos.y + sizeMinus.y - 1);
-        ctx.stroke();
+      for (var sub = 0; sub < subdiv; sub++) {
+        var x1 =
+            (x - (cellSize.x * (sub + 1) / (subdiv + 1)) / zoom).round() - 0.5;
+        stroke(x1, pos.y, x1, pos.y + sizeMinus.y);
       }
     }
-    for (var i = 1; i <= arrayPlus.y; i++) {
-      ctx.strokeStyle = gridColor;
-
-      var y = (pos.y + this.size.y * i / zoom).round() - 0.5;
-      ctx.beginPath();
-      ctx.moveTo(pos.x, y);
-      ctx.lineTo(pos.x + sizeMinus.x - 1, y);
-      ctx.stroke();
-
+    for (var i = 1; i <= this.size.y / cellSize.y; i++) {
+      var y = (pos.y + cellSize.y * i / zoom).round() - 0.5;
+      if (i < this.size.y / cellSize.y) {
+        ctx.strokeStyle = gridColor;
+        stroke(pos.x, y, pos.x + sizeMinus.x, y);
+      }
       ctx.strokeStyle = subGridColor;
-      for (var sub = 0; sub < subdivisions; sub++) {
-        var y1 = (y - (this.size.y * (sub + 1) / (subdivisions + 1)) / zoom)
-                .round() -
-            0.5;
-        ctx.beginPath();
-        ctx.moveTo(pos.x, y1);
-        ctx.lineTo(pos.x + sizeMinus.x - 1, y1);
-        ctx.stroke();
+      for (var sub = 0; sub < subdiv; sub++) {
+        var y1 =
+            (y - (cellSize.y * (sub + 1) / (subdiv + 1)) / zoom).round() - 0.5;
+        stroke(pos.x, y1, pos.x + sizeMinus.x, y1);
       }
     }
   }
 
   Map<String, dynamic> toJson() => {
-        'array': pointToJson(array),
+        'cellSize': pointToJson(cellSize),
         'subdivisions': subdivisions,
         'position': pointToJson(position),
         'size': pointToJson(size)
       };
   void fromJson(Map<String, dynamic> json) {
-    array = pointFromJson(json['array']);
+    cellSize = pointFromJson(json['cellSize']);
     subdivisions = json['subdivisions'];
     position = pointFromJson(json['position']);
     size = pointFromJson(json['size']);

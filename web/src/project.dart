@@ -42,14 +42,14 @@ class Project {
     offsetElement.style.top = 'calc(50% + ${point.y}px)';
   }
 
-  void registerIntInput(InputElement e, void Function(int value) apply,
-      void Function(int value) bonus, int Function() applyBackwards) {
+  void registerIntInput(InputElement e, void Function(double value) apply,
+      double Function() applyBackwards) {
     void parse(bool executeBonus) {
       var s = e.value;
-      var v = int.tryParse(s);
+      var v = double.tryParse(s);
       if (v != null && v >= 0) {
         apply(v);
-        if (executeBonus) bonus(v);
+        if (executeBonus) redraw();
       }
     }
 
@@ -81,20 +81,17 @@ class Project {
     _grid = Grid(this);
 
     registerIntInput(
-        querySelector('#arrX'),
-        (v) => _grid.array = Point(v, _grid.array.y),
-        (v) => redraw(),
-        () => _grid.array.x);
+        querySelector('#cellX'),
+        (v) => _grid.cellSize = Point(v, _grid.cellSize.y),
+        () => _grid.cellSize.x);
     registerIntInput(
-        querySelector('#arrY'),
-        (v) => _grid.array = Point(_grid.array.x, v),
-        (v) => redraw(),
-        () => _grid.array.y);
+        querySelector('#cellY'),
+        (v) => _grid.cellSize = Point(_grid.cellSize.x, v),
+        () => _grid.cellSize.y);
     registerIntInput(
         querySelector('#subdivisions'),
-        (v) => _grid.subdivisions = v,
-        (v) => redraw(),
-        () => _grid.subdivisions);
+        (v) => _grid.subdivisions = v.round(),
+        () => _grid.subdivisions.toDouble());
 
     urlInput.onKeyDown.listen((e) {
       if (e.keyCode == 13) {
@@ -123,6 +120,11 @@ class Project {
         subMove.cancel();
         subUp.cancel();
       });
+    });
+
+    querySelector('#round').onClick.listen((e) {
+      _grid.fit();
+      redraw();
     });
 
     querySelector('#save').onClick.listen((e) => download());

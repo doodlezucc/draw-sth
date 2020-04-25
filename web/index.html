@@ -18,14 +18,17 @@
     <input id="imgUrl" type="url" placeholder="Enter image url...">
     <div class="controls">
       <div class="section">
+        <button id="round">Fit to grid</button>
+      </div>
+      <div class="section">
         <div class="control">
-          <label>Array</label>
-          <input id="arrX" type="number" min="0" value="3">
-          <input id="arrY" type="number" min="0" value="3">
+          <label>Cell Size</label>
+          <input id="cellX" type="number" min="10" value="50">
+          <input id="cellY" type="number" min="10" value="50">
         </div>
         <div class="control">
           <label>Subdivisions</label>
-          <input id="subdivisions" type="number" min="0" value="0">
+          <input id="subdivisions" type="number" min="0" value="0" max="10">
         </div>
       </div>
       <div class="section">
