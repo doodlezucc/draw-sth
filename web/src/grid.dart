@@ -8,6 +8,14 @@ class Grid {
   final Project project;
   final DivElement el = querySelector('#grid');
 
+  String _gridColor = '#fff';
+  String get gridColor => _gridColor;
+  set gridColor(String gridColor) {
+    _gridColor = gridColor;
+  }
+
+  String get subGridColor => _gridColor + 'a';
+
   String _outsideColor = '#000c';
   String get outsideColor => _outsideColor;
   set outsideColor(String outsideColor) {
@@ -132,38 +140,28 @@ class Grid {
     });
   }
 
-  void drawOn(CanvasRenderingContext2D ctx) {
+  Point<int> round(Point<num> p) {
+    return Point<int>(p.x.round(), p.y.round());
+  }
+
+  void drawOn(CanvasRenderingContext2D ctx, Rectangle rect) {
     var zoom = project.zoom;
-    var position = Point<int>(this.position.x ~/ zoom, this.position.y ~/ zoom);
+    var position = round(
+        rect.topLeft + Point(this.position.x / zoom, this.position.y / zoom));
     var pos = Point<int>(position.x + 1, position.y + 1);
     var size = Point<int>(this.size.x ~/ zoom + 1, this.size.y ~/ zoom + 1);
     var sizeMinus = Point<int>(size.x - 1, size.y - 1);
 
     ctx.fillStyle = outsideColor;
 
-    ctx.fillRect(0, 0, position.x, project.zoomedSize.y);
+    ctx.fillRect(0, 0, position.x, project.canvas.height);
     ctx.fillRect(position.x + size.x, 0,
-        project.zoomedSize.x - size.x - position.x, project.zoomedSize.y);
+        project.canvas.width - size.x - position.x, project.canvas.height);
     ctx.fillRect(position.x, 0, size.x, position.y);
     ctx.fillRect(position.x, position.y + size.y, size.x,
-        project.zoomedSize.y - size.y - position.y);
+        project.canvas.height - size.y - position.y);
 
-    void invert(Point<int> start, Point<int> size, bool solid) {
-      var d = ctx.getImageData(start.x, start.y, size.x, size.y);
-      for (var i = 0; i < d.data.length; i += 4) {
-        var luminance = (0.2126 * d.data[i] +
-                0.7152 * d.data[i + 1] +
-                0.0722 * d.data[i + 2]) /
-            255;
-        var v = ((0.8 - 2 * luminance.round()) * (solid ? 120 : 30)).floor();
-        d.data[i] += v;
-        d.data[i + 1] += v;
-        d.data[i + 2] += v;
-      }
-      ctx.putImageData(d, start.x, start.y);
-    }
-
-    ctx.strokeStyle = '#fff';
+    ctx.strokeStyle = gridColor;
     ctx.strokeRect(
         pos.x.round() - 0.5, pos.y.round() - 0.5, sizeMinus.x, sizeMinus.y);
 
@@ -175,12 +173,22 @@ class Grid {
     }
 
     for (var i = 1; i < lines.x; i++) {
+      ctx.strokeStyle = isSolid(i) ? gridColor : subGridColor;
+
       var x = (pos.x + sizeMinus.x * (i / lines.x)).round();
-      invert(Point(x, pos.y), Point(1, sizeMinus.y - 1), isSolid(i));
+      ctx.beginPath();
+      ctx.moveTo(x, pos.y);
+      ctx.lineTo(x, pos.y + sizeMinus.y - 1);
+      ctx.stroke();
     }
     for (var i = 1; i < lines.y; i++) {
+      ctx.strokeStyle = isSolid(i) ? gridColor : subGridColor;
+
       var y = (pos.y + sizeMinus.y * (i / lines.y)).round();
-      invert(Point(pos.x, y), Point(sizeMinus.x - 1, 1), isSolid(i));
+      ctx.beginPath();
+      ctx.moveTo(pos.x, y);
+      ctx.lineTo(pos.x + sizeMinus.x - 1, y);
+      ctx.stroke();
     }
   }
 

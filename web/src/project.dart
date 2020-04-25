@@ -12,7 +12,14 @@ class Project {
   final ImageElement img = querySelector('img');
   final InputElement urlInput = querySelector('#imgUrl');
   final DivElement offsetElement = querySelector('#offset');
+  final DivElement editor = querySelector('.image');
   Grid _grid;
+
+  bool _lockGrid = false;
+  bool get lockGrid => _lockGrid;
+  set lockGrid(bool lockGrid) {
+    _lockGrid = lockGrid;
+  }
 
   int _zoomWidth = 500;
   int get zoomWidth => _zoomWidth;
@@ -95,7 +102,9 @@ class Project {
       }
     });
 
-    querySelector('.image').onMouseDown.listen((e) {
+    window.onResize.listen((e) => resizeCanvas());
+
+    editor.onMouseDown.listen((e) {
       HtmlElement el = e.target;
       if (el.matchesWithAncestors('#grid')) return;
       var pos1 = offset;
@@ -106,6 +115,7 @@ class Project {
         var diff = (Point<int>(e.client.x, e.client.y) - mouse1);
 
         offset = pos1 + diff * zoom;
+        redraw();
       });
 
       var subUp;
@@ -193,25 +203,31 @@ class Project {
   }
 
   void setSize() {
-    canvas.width = zoomedSize.x.round();
-    canvas.height = zoomedSize.y.round();
     _grid.position = _grid.position;
     _grid.size = _grid.size;
     offset = offset;
+    resizeCanvas();
+  }
+
+  void resizeCanvas() {
+    canvas.width = editor.clientWidth;
+    canvas.height = editor.clientHeight;
     redraw();
   }
 
   void redraw() {
-    var ctx = canvas.context2D
-      ..imageSmoothingEnabled = false
-      ..imageSmoothingQuality = 'low';
+    var ctx = canvas.context2D;
 
-    ctx.drawImageScaled(img, 0, 0, canvas.width, canvas.height);
-    // var src = Rectangle.fromPoints(_grid.position, _grid.position + _grid.size);
-    // var margin = 100;
-    // var dest = Rectangle.fromPoints(_grid.position * (1 / zoom),
-    //     (_grid.position + _grid.size) * (1 / zoom));
-    // var margin2 = margin / zoom;
-    _grid.drawOn(ctx);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    var client = editor.client;
+    var center = client.bottomRight * 0.5;
+
+    var dest = Rectangle.fromPoints(
+        center + (size * -0.5 + offset) * (1 / zoom),
+        center + (size * 0.5 + offset) * (1 / zoom));
+
+    ctx.drawImageToRect(img, dest);
+    _grid.drawOn(ctx, dest);
   }
 }
