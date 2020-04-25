@@ -217,7 +217,7 @@ class Grid {
     ctx.strokeRect(
         pos.x.round() - 0.5, pos.y.round() - 0.5, size.x - 1, size.y - 1);
 
-    for (var i = 1; i < arrayPlus.x; i++) {
+    for (var i = 1; i <= arrayPlus.x; i++) {
       ctx.strokeStyle = gridColor;
 
       var x = (pos.x + this.size.x * i / zoom).round() - 0.5;
@@ -225,8 +225,19 @@ class Grid {
       ctx.moveTo(x, pos.y);
       ctx.lineTo(x, pos.y + sizeMinus.y - 1);
       ctx.stroke();
+
+      ctx.strokeStyle = subGridColor;
+      for (var sub = 0; sub < subdivisions; sub++) {
+        var x1 = (x - (this.size.x * (sub + 1) / (subdivisions + 1)) / zoom)
+                .round() -
+            0.5;
+        ctx.beginPath();
+        ctx.moveTo(x1, pos.y);
+        ctx.lineTo(x1, pos.y + sizeMinus.y - 1);
+        ctx.stroke();
+      }
     }
-    for (var i = 1; i < arrayPlus.y; i++) {
+    for (var i = 1; i <= arrayPlus.y; i++) {
       ctx.strokeStyle = gridColor;
 
       var y = (pos.y + this.size.y * i / zoom).round() - 0.5;
@@ -234,6 +245,17 @@ class Grid {
       ctx.moveTo(pos.x, y);
       ctx.lineTo(pos.x + sizeMinus.x - 1, y);
       ctx.stroke();
+
+      ctx.strokeStyle = subGridColor;
+      for (var sub = 0; sub < subdivisions; sub++) {
+        var y1 = (y - (this.size.y * (sub + 1) / (subdivisions + 1)) / zoom)
+                .round() -
+            0.5;
+        ctx.beginPath();
+        ctx.moveTo(pos.x, y1);
+        ctx.lineTo(pos.x + sizeMinus.x - 1, y1);
+        ctx.stroke();
+      }
     }
   }
 
