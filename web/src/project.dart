@@ -81,15 +81,15 @@ class Project {
     _grid = Grid(this);
 
     registerIntInput(
-        querySelector('#divX'),
-        (v) => _grid.divisions = Point(v, _grid.divisions.y),
+        querySelector('#arrX'),
+        (v) => _grid.array = Point(v, _grid.array.y),
         (v) => redraw(),
-        () => _grid.divisions.x);
+        () => _grid.array.x);
     registerIntInput(
-        querySelector('#divY'),
-        (v) => _grid.divisions = Point(_grid.divisions.x, v),
+        querySelector('#arrY'),
+        (v) => _grid.array = Point(_grid.array.x, v),
         (v) => redraw(),
-        () => _grid.divisions.y);
+        () => _grid.array.y);
     registerIntInput(
         querySelector('#subdivisions'),
         (v) => _grid.subdivisions = v,
