@@ -9,12 +9,12 @@ class Grid {
   final DivElement el = querySelector('#grid');
 
   String _gridColor = '#fff';
-  String get gridColor => _gridColor;
+  String get gridColor => _gridColor + 'b';
   set gridColor(String gridColor) {
     _gridColor = gridColor;
   }
 
-  String get subGridColor => _gridColor + 'a';
+  String get subGridColor => _gridColor + '3';
 
   String _outsideColor = '#000c';
   String get outsideColor => _outsideColor;
@@ -67,11 +67,12 @@ class Grid {
         ((_size.y * arrayPlus.y) / project.zoom).toString() + 'px';
   }
 
-  static const minSize = Point<int>(50, 50);
+  static const minSize = Point(50.0, 50.0);
 
   void immediateClamp() {
     size = clamp(size, minSize, project.size);
-    position = clamp(position, Point(0, 0), project.size - size);
+    position = clamp(position, Point(0, 0),
+        project.size - Point(size.x * arrayPlus.x, size.y * arrayPlus.y));
   }
 
   static const dragSensitivity = 0; // minimum distance to enable dragging
@@ -120,19 +121,42 @@ class Grid {
             position = Point(x, y);
           };
         } else {
+          var p = Point(size1.x * arrayPlus.x, size1.y * arrayPlus.y);
+
           var diffPosMin = pos1 * -1;
-          var diffPosMax = Point(size1.x * arrayPlus.x, size1.y * arrayPlus.y) -
-              Point<num>(minSize.x, minSize.y);
-          var diffSizeMin = Point<num>(minSize.x, minSize.y) -
-              Point(size1.x * arrayPlus.x, size1.y * arrayPlus.y);
-          var diffSizeMax = project.size -
-              (pos1 + Point(size1.x * arrayPlus.x, size1.y * arrayPlus.y));
+          var diffPosMax = p - Point<num>(minSize.x, minSize.y);
+          var diffSizeMin = Point<num>(minSize.x, minSize.y) - p;
+          var diffSizeMax = project.size - (pos1 + p);
 
           action = (diff) {
             var x = pos1.x;
             var y = pos1.y;
             var width = size1.x;
             var height = size1.y;
+
+            if (classes.contains('corner')) {
+              if (classes.contains('top')) {
+                if (classes.contains('right')) {
+                  diff = diff.x > -diff.y
+                      ? Point(diff.x, -diff.x)
+                      : Point(-diff.y, diff.y);
+                } else {
+                  diff = -diff.x > -diff.y
+                      ? Point(diff.x, diff.x)
+                      : Point(diff.y, diff.y);
+                }
+              } else {
+                if (classes.contains('right')) {
+                  diff = diff.x > diff.y
+                      ? Point(diff.x, diff.x)
+                      : Point(diff.y, diff.y);
+                } else {
+                  diff = -diff.x > diff.y
+                      ? Point(diff.x, -diff.x)
+                      : Point(-diff.y, diff.y);
+                }
+              }
+            }
 
             if (classes.contains('top')) {
               var v = min(max(diff.y, diffPosMin.y), diffPosMax.y);
