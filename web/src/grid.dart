@@ -64,6 +64,7 @@ class Grid {
   Point<double> get cellSize => _cellSize;
   set cellSize(Point<double> size) {
     _cellSize = clampMin(size, Point(10, 10));
+    fit();
   }
 
   void fit() {
@@ -89,11 +90,6 @@ class Grid {
       void Function(Point<double>) action;
       if (e.target != el) {
         var classes = (e.target as HtmlElement).classes;
-
-        var diffPosMin = pos1 * -1;
-        var diffPosMax = size1 - minSize;
-        var diffSizeMin = minSize - size1;
-        var diffSizeMax = project.size - size1 - pos1;
 
         action = (diff) {
           var x = pos1.x;
@@ -122,8 +118,6 @@ class Grid {
           position = Point(x, y);
         };
       } else {
-        var diffMax = Point<double>(project.size.x, project.size.y) - size1;
-
         action = (diff) {
           //position = clamp<double>(pos1 + diff, Point(0, 0), diffMax);
           position = pos1 + diff;
@@ -164,20 +158,32 @@ class Grid {
 
   void drawOn(CanvasRenderingContext2D ctx, Rectangle rect) {
     var zoom = project.zoom;
-    var position = round(
-        rect.topLeft + Point(this.position.x / zoom, this.position.y / zoom));
-    var pos = Point<int>(position.x + 1, position.y + 1);
+    var position = round(Point(this.position.x / zoom, this.position.y / zoom));
+    var pos = round(rect.topLeft + position + Point(1, 1));
     var size = Point<int>(this.size.x ~/ zoom + 1, this.size.y ~/ zoom + 1);
     var sizeMinus = Point<int>(size.x - 1, size.y - 1);
 
     ctx.fillStyle = outsideColor;
 
-    ctx.fillRect(0, 0, position.x, project.canvas.height);
-    ctx.fillRect(position.x + size.x, 0,
-        project.canvas.width - size.x - position.x, project.canvas.height);
-    ctx.fillRect(position.x, 0, size.x, position.y);
-    ctx.fillRect(position.x, position.y + size.y, size.x,
-        project.canvas.height - size.y - position.y);
+    var mx = -0.420;
+
+    void rectF(num x1, num y1, num x2, num y2) {
+      x1 = max(rect.left, x1);
+      y1 = max(rect.top, y1);
+
+      x2 = x2 == mx ? rect.right : min(rect.right, x2);
+      y2 = y2 == mx ? rect.bottom : min(rect.bottom, y2);
+
+      ctx.fillRect(x1.round(), y1.round(), max(x2 - x1, 0).round(),
+          max(y2 - y1, 0).round());
+    }
+
+    rectF(0, 0, rect.left + position.x, mx);
+    rectF(rect.left + position.x + size.x, 0, mx, mx);
+    rectF(rect.left + position.x, 0, rect.left + position.x + size.x,
+        rect.top + position.y);
+    rectF(rect.left + position.x, rect.top + position.y + size.y,
+        rect.left + position.x + size.x, mx);
 
     ctx.strokeStyle = gridColor;
     ctx.strokeRect(

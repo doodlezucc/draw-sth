@@ -1,4 +1,4 @@
-@import url(https://fonts.googleapis.com/css?family=Roboto);
+@import url('https://fonts.googleapis.com/css2?family=Rubik&display=swap');
 
 html, body {
   margin: 0;
@@ -6,55 +6,101 @@ html, body {
   height: 100%;
 }
 body {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Rubik', sans-serif;
   display: flex;
   flex-direction: column;
   user-select: none;
+  background-color: #2c312f;
+  color: white;
+  --light: #80FFD4;
+  --lame-border: 2px solid #666;
 }
 
 .top-bar {
   display: inline-flex;
   flex-direction: column;
-  background-color: white;
+  background-color: #222;
+  border-bottom: var(--lame-border);
   box-shadow: 0 0 15px #000a;
   padding: 10px;
 }
 
+.expand {
+  width: 100%;
+  flex: auto !important;
+}
+
 .controls {
-  display: inline-flex;
+  display: flex;
   flex-direction: row;
   margin-top: 10px;
+  align-items: center;
+}
+.controls > *:not(:last-child) {
+  margin-right: 5px;
+}
+.controls > * {
+  flex: none;
 }
 
 .control {
   display: inline-flex;
   flex-direction: row;
-  margin-right: 10px;
 }
 
-label {
-  margin-right: 5px;
+.control > label {
+  margin: 0 5px;
   align-self: center;
 }
-label::after {
-  content: ':';
+
+.control, input, button, .btn {
+  border-radius: 4px;
+}
+
+.control, button, .btn {
+  border: var(--lame-border);
+}
+
+input, button, .btn {
+  background-color: white;
+  outline: none;
+  color: #222;
+  text-shadow: none;
+  font-family: inherit;
+  font-size: 15px;
 }
 
 input {
   width: 200px;
-  font-family: inherit;
+  padding: 2px 5px;
+  border: none;
 }
 input[type=number] {
   width: 50px;
 }
+input[type=file] {
+  display: none;
+}
 
+button, .btn {
+  cursor: pointer;
+  padding: 6px 9px;
+  color: inherit;
+  background: #313131;
+  border: 2px solid var(--light);
+  color: var(--light);
+  text-transform: uppercase;
+}
+button:hover, .btn:hover {
+  border: 2px solid white;
+  color: white;
+}
 
 div.image {
   position: relative;
-  margin: 10px;
-  box-shadow: 0 0 10px #000a;
   height: 100%;
   overflow: hidden;
+  box-shadow: inset 0 0 50vw #0001;
 }
 
 img {
@@ -72,7 +118,6 @@ canvas {
   top: 0;
   left: 0;
   pointer-events: none;
-  z-index: -1;
 }
 
 #grid {
@@ -82,6 +127,7 @@ canvas {
   --inset-size: 6px;
   --inset: -10px;
   --corner-size: calc(var(--resizer-size) + 10px);
+  z-index: 1;
 }
 #grid > * {
   background-color: transparent;
