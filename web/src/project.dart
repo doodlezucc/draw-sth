@@ -150,11 +150,6 @@ class Project {
       });
     });
 
-    querySelector('#round').onClick.listen((e) {
-      _grid.fit();
-      redraw();
-    });
-
     querySelector('#save').onClick.listen((e) => download());
     InputElement fileInput = querySelector('#upload');
     fileInput.onChange.listen((e) {

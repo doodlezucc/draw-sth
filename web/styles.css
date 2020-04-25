@@ -76,7 +76,7 @@ input {
   border: none;
 }
 input[type=number] {
-  width: 75px;
+  width: 65px;
 }
 input[type=file] {
   display: none;
