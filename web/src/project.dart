@@ -17,6 +17,7 @@ class Project {
   final InputElement cellX = querySelector('#cellX');
   final InputElement cellY = querySelector('#cellY');
   Grid _grid;
+  String _fileName = 'draw_sth.json';
 
   bool _lockGrid = false;
   bool get lockGrid => _lockGrid;
@@ -100,6 +101,7 @@ class Project {
       zoomWidth = (width < rect.width ? width : rect.width).round();
     });
     img.src = src;
+    urlInput.value = img.src;
   }
 
   void applyCellSize(bool x, bool y) {
@@ -169,6 +171,7 @@ class Project {
     fileInput.onChange.listen((e) {
       var file = fileInput.files[0];
       if (file != null) {
+        _fileName = file.name;
         var reader = FileReader();
         reader.onLoad.listen((e) {
           String jsonString = (e.target as dynamic).result;
@@ -176,6 +179,7 @@ class Project {
         });
         reader.readAsText(file);
       }
+      fileInput.value = '';
     });
 
     document.onKeyDown.listen((e) {
@@ -183,7 +187,7 @@ class Project {
         if (e.shiftKey) {
           switch (e.key) {
             case 'R':
-              reloadStylesheet();
+              reloadStylesheet(); //TODO remove from final version
               return;
           }
         }
@@ -211,6 +215,7 @@ class Project {
       };
   void fromJson(Map<String, dynamic> json) {
     img.src = json['src'];
+    urlInput.value = img.src;
     var sub;
     sub = img.onLoad.listen((e) {
       sub.cancel();
@@ -229,7 +234,7 @@ class Project {
     var aElement = AnchorElement(
         href:
             'data:text/json;charset=utf-8,' + Uri.encodeComponent(jsonString));
-    aElement.download = 'draw_sth.json';
+    aElement.download = _fileName;
     document.body.append(aElement);
     aElement.click();
     aElement.remove();

@@ -10,7 +10,7 @@ body {
   display: flex;
   flex-direction: column;
   user-select: none;
-  background-color: #2c312f;
+  background-color: #333;
   color: white;
   --light: #80FFD4;
   --lame-border: 2px solid #666;
@@ -19,7 +19,7 @@ body {
 .top-bar {
   display: inline-flex;
   flex-direction: column;
-  background-color: #222;
+  background-color: #1a1a1a;
   border-bottom: var(--lame-border);
   box-shadow: 0 0 15px #000a;
   padding: 10px;
@@ -33,7 +33,6 @@ body {
 .controls {
   display: flex;
   flex-direction: row;
-  margin-top: 10px;
   align-items: center;
 }
 .controls > *:not(:last-child) {
@@ -65,7 +64,7 @@ body {
 input, button, .btn {
   background-color: white;
   outline: none;
-  color: #222;
+  color: black;
   text-shadow: none;
   font-family: inherit;
   font-size: 15px;
@@ -74,6 +73,13 @@ input, button, .btn {
 input {
   padding: 2px 5px;
   border: none;
+  background-color: #fffc;
+}
+input:hover, input:focus {
+  background-color: #fff;
+}
+input:focus {
+  border: inset 2px solid var(--light);
 }
 input[type=number] {
   width: 65px;
@@ -81,15 +87,12 @@ input[type=number] {
 input[type=file] {
   display: none;
 }
-input[type=url] {
-  width: 200px;
-}
 
 button, .btn {
   cursor: pointer;
   padding: 6px 9px;
   color: inherit;
-  background: #313131;
+  background: #2a2a2a;
   border: 2px solid var(--light);
   color: var(--light);
   text-transform: uppercase;
