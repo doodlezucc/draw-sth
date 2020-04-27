@@ -64,12 +64,12 @@ class Grid {
   Point<double> get cellSize => _cellSize;
   set cellSize(Point<double> size) {
     _cellSize = clampMin(size, Point(25, 25));
-    fit();
   }
 
   void fit() {
     size = Point((size.x / cellSize.x).round() * cellSize.x,
         (size.y / cellSize.y).round() * cellSize.y);
+        project.redraw();
   }
 
   Point get minSize => cellSize;
@@ -147,7 +147,6 @@ class Grid {
         subMove.cancel();
         subUp.cancel();
         fit();
-        project.redraw();
       });
     });
   }

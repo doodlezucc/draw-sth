@@ -50,7 +50,8 @@ class Project {
   void registerIntInput(
       InputElement e,
       void Function(double value, bool bonus) apply,
-      String Function() applyBackwards) {
+      String Function() applyBackwards,
+      {void Function() onMouseUp}) {
     void parse(bool executeBonus) {
       var s = e.value;
       var v = double.tryParse(s);
@@ -60,6 +61,16 @@ class Project {
       }
     }
 
+    if (onMouseUp != null) {
+      e.onMouseDown.listen((ev) {
+        var sub;
+        sub = window.onMouseUp.listen((ev) {
+          onMouseUp();
+          sub.cancel();
+        });
+      });
+    }
+
     e.onInput.listen((ev) {
       parse(true);
     });
@@ -67,6 +78,13 @@ class Project {
 
     e.onBlur.listen((ev) {
       e.value = applyBackwards();
+      if (onMouseUp != null) onMouseUp();
+    });
+
+    e.onKeyDown.listen((ev) {
+      if (ev.keyCode == 13) {
+        e.blur();
+      }
     });
   }
 
@@ -102,7 +120,7 @@ class Project {
       _grid.cellSize = Point(
           _grid.cellSize.x.roundToDouble(), _grid.cellSize.y.roundToDouble());
       return _grid.cellSize.x.toStringAsFixed(1);
-    });
+    }, onMouseUp: _grid.fit);
     registerIntInput(cellY, (v, bonus) {
       if (v < 25 || !bonus) return;
       _grid.cellSize =
@@ -113,7 +131,7 @@ class Project {
       _grid.cellSize = Point(
           _grid.cellSize.x.roundToDouble(), _grid.cellSize.y.roundToDouble());
       return _grid.cellSize.y.toStringAsFixed(1);
-    });
+    }, onMouseUp: _grid.fit);
     ratioCheckbox.checked = true;
     applyCellSize(true, true);
     registerIntInput(
@@ -185,7 +203,7 @@ class Project {
     });
 
     document.onMouseWheel.listen((e) {
-      zoomWidth -= zoomSpeed * min(max(e.deltaY, -1), 1);
+      zoomWidth -= zoomSpeed * min(max(e.deltaY, -1), 1).round();
     });
   }
 
