@@ -6,7 +6,7 @@ import 'grid.dart';
 import 'io.dart';
 
 class Project {
-  static const zoomSpeed = 50;
+  static const zoomSpeed = 10;
 
   final CanvasElement canvas = querySelector('canvas');
   final ImageElement img = querySelector('img');
@@ -23,10 +23,16 @@ class Project {
   bool get lockGrid => lockCheckbox.checked;
   bool get keepRatio => ratioCheckbox.checked;
 
+  int get minWidth {
+    var rect = editor.client;
+    var width = (img.width / img.height) * rect.height;
+    return (width < rect.width ? width : rect.width).round() ~/ 2;
+  }
+
   int _zoomWidth = 500;
   int get zoomWidth => _zoomWidth;
   set zoomWidth(int zoomWidth) {
-    _zoomWidth = max(50, zoomWidth);
+    _zoomWidth = max(minWidth, zoomWidth);
     setSize();
   }
 
@@ -92,9 +98,7 @@ class Project {
       _grid.immediateClamp();
       setSize();
       offset = Point(0, 0);
-      var rect = querySelector('.image').client;
-      var width = (img.width / img.height) * rect.height;
-      zoomWidth = (width < rect.width ? width : rect.width).round();
+      zoomWidth = minWidth * 2;
     });
     img.src = src;
     urlInput.value = img.src;
@@ -208,7 +212,7 @@ class Project {
     });
 
     document.onMouseWheel.listen((e) {
-      zoomWidth -= zoomSpeed * min(max(e.deltaY, -1), 1).round();
+      zoomWidth -= (zoomSpeed * min(max(e.deltaY, -5), 5)).round();
     });
   }
 
@@ -231,6 +235,7 @@ class Project {
           _grid.subdivisions.toString();
       applyCellSize(true, true);
       setSize();
+      if (!lockGrid) lockCheckbox.click();
     });
   }
 
@@ -276,8 +281,8 @@ class Project {
     var center = client.bottomRight * 0.5;
 
     var dest = Rectangle.fromPoints(
-        center + (size * -0.5 + offset) * (1 / zoom),
-        center + (size * 0.5 + offset) * (1 / zoom));
+        Grid.round(center + (size * -0.5 + offset) * (1 / zoom)),
+        Grid.round(center + (size * 0.5 + offset) * (1 / zoom)));
 
     ctx.drawImageToRect(img, dest);
     _grid.drawOn(ctx, dest);

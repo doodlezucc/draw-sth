@@ -98,13 +98,12 @@ button, .btn {
   padding: 6px 9px;
   color: inherit;
   background: #2a2a2a;
-  border: 2px solid var(--light);
-  color: var(--light);
+  border: 2px solid white;
   text-transform: uppercase;
 }
 button:hover, .btn:hover {
-  border: 2px solid white;
-  color: white;
+  border-color: var(--light);
+  color: var(--light);
 }
 
 div.image {

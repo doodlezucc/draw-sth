@@ -154,14 +154,14 @@ class Grid {
     });
   }
 
-  Point<int> round(Point<num> p) {
+  static Point<int> round(Point<num> p) {
     return Point<int>(p.x.round(), p.y.round());
   }
 
-  void drawOn(CanvasRenderingContext2D ctx, Rectangle rect) {
+  void drawOn(CanvasRenderingContext2D ctx, Rectangle<int> rect) {
     var zoom = project.zoom;
     var position = round(Point(this.position.x / zoom, this.position.y / zoom));
-    var pos = round(rect.topLeft + position + Point(1, 1));
+    var pos = rect.topLeft + position + Point<int>(1, 1);
     var size = Point<int>(this.size.x ~/ zoom + 1, this.size.y ~/ zoom + 1);
     var sizeMinus = Point<int>(size.x - 1, size.y - 1);
 
