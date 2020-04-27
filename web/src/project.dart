@@ -16,15 +16,11 @@ class Project {
   final InputElement ratioCheckbox = querySelector('#keepRatio');
   final InputElement cellX = querySelector('#cellX');
   final InputElement cellY = querySelector('#cellY');
+  final InputElement lockCheckbox = querySelector('#lockGrid');
   Grid _grid;
   String _fileName = 'draw_sth.json';
 
-  bool _lockGrid = false;
-  bool get lockGrid => _lockGrid;
-  set lockGrid(bool lockGrid) {
-    _lockGrid = lockGrid;
-  }
-
+  bool get lockGrid => lockCheckbox.checked;
   bool get keepRatio => ratioCheckbox.checked;
 
   int _zoomWidth = 500;
@@ -141,6 +137,15 @@ class Project {
       if (e.keyCode == 13) {
         setSrc(urlInput.value);
       }
+    });
+
+    lockCheckbox.onInput.listen((e) {
+      var lock = lockGrid;
+      _grid.el.style.display = lock ? 'none' : 'block';
+      cellX.disabled = lock;
+      cellY.disabled = lock;
+      ratioCheckbox.disabled = lock;
+      urlInput.disabled = lock;
     });
 
     window.onResize.listen((e) => resizeCanvas());

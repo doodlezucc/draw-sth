@@ -46,6 +46,7 @@ body {
   display: inline-flex;
   flex-direction: row;
   align-items: center;
+  height: 22px;
 }
 
 .control > label {
@@ -55,6 +56,10 @@ body {
 
 .control, input, button, .btn {
   border-radius: 4px;
+}
+.control > input {
+  border-radius: 2px;
+  height: calc(100% - 4px);
 }
 
 .control, button, .btn {
@@ -75,11 +80,11 @@ input {
   border: none;
   background-color: #fffc;
 }
-input:hover, input:focus {
+input:enabled:hover, input:focus {
   background-color: #fff;
 }
-input:focus {
-  border: inset 2px solid var(--light);
+input:disabled {
+  background-color: #aaaa;
 }
 input[type=number] {
   width: 65px;
