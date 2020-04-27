@@ -117,8 +117,6 @@ class Project {
       applyCellSize(false, true);
     }, () {
       applyCellSize(true, false);
-      _grid.cellSize = Point(
-          _grid.cellSize.x.roundToDouble(), _grid.cellSize.y.roundToDouble());
       return _grid.cellSize.x.toStringAsFixed(1);
     }, onMouseUp: _grid.fit);
     registerIntInput(cellY, (v, bonus) {
@@ -128,8 +126,6 @@ class Project {
       applyCellSize(true, false);
     }, () {
       applyCellSize(true, true);
-      _grid.cellSize = Point(
-          _grid.cellSize.x.roundToDouble(), _grid.cellSize.y.roundToDouble());
       return _grid.cellSize.y.toStringAsFixed(1);
     }, onMouseUp: _grid.fit);
     ratioCheckbox.checked = true;
@@ -221,6 +217,9 @@ class Project {
       _offset = pointFromJson(json['offset']);
       _zoomWidth = json['zoomWidth'];
       _grid.fromJson(json['grid']);
+      (querySelector('#subdivisions') as InputElement).value =
+          _grid.subdivisions.toString();
+      applyCellSize(true, true);
       setSize();
     });
   }

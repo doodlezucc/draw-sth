@@ -69,7 +69,7 @@ class Grid {
   void fit() {
     size = Point((size.x / cellSize.x).round() * cellSize.x,
         (size.y / cellSize.y).round() * cellSize.y);
-        project.redraw();
+    project.redraw();
   }
 
   Point get minSize => cellSize;
@@ -79,6 +79,9 @@ class Grid {
     position = clamp(position, Point(0, 0),
         Point<double>(project.size.x, project.size.y) - size);
   }
+
+  Point<int> get array =>
+      Point((size.x / cellSize.x).round(), (size.y / cellSize.y).round());
 
   static const dragSensitivity = 0; // minimum distance to enable dragging
 
@@ -229,12 +232,13 @@ class Grid {
         'cellSize': pointToJson(cellSize),
         'subdivisions': subdivisions,
         'position': pointToJson(position),
-        'size': pointToJson(size)
+        'array': pointToJson(array)
       };
   void fromJson(Map<String, dynamic> json) {
     cellSize = pointFromJson(json['cellSize']);
     subdivisions = json['subdivisions'];
     position = pointFromJson(json['position']);
-    size = pointFromJson(json['size']);
+    size = pointFromJson(json['array']);
+    size = Point(size.x * cellSize.x, size.y * cellSize.y);
   }
 }
