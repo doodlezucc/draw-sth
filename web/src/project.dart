@@ -159,6 +159,7 @@ class Project {
       cellY.disabled = lock;
       ratioCheckbox.disabled = lock;
       urlInput.disabled = lock;
+      _updateStorage = true;
     });
 
     window.onResize.listen((e) => resizeCanvas());
@@ -238,6 +239,7 @@ class Project {
         'src': img.src,
         'offset': pointToJson(offset),
         'zoomWidth': zoomWidth,
+        'lock': lockGrid,
         'grid': _grid.toJson()
       };
   void fromJson(Map<String, dynamic> json) {
@@ -252,7 +254,10 @@ class Project {
           _grid.subdivisions.toString();
       applyCellSize(true, true);
       setSize();
-      if (!lockGrid) lockCheckbox.click();
+      bool shouldLock = json['lock'] ?? true;
+      if ((shouldLock && !lockGrid) || (!shouldLock && lockGrid)) {
+        lockCheckbox.click();
+      }
       loading = false;
     });
     img.src = json['src'];
@@ -275,12 +280,12 @@ class Project {
   }
 
   void loadFromStorage() {
+    _updateStorage = false;
     if (_storage.isNotEmpty) {
       fromJson(json.decode(_storage['json']));
     } else {
       initDemo();
     }
-    _updateStorage = false;
   }
 
   void clearStorage() {
