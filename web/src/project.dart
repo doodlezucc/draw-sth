@@ -19,6 +19,7 @@ class Project {
   final InputElement cellX = querySelector('#cellX');
   final InputElement cellY = querySelector('#cellY');
   final InputElement lockCheckbox = querySelector('#lockGrid');
+  final HtmlElement loader = querySelector('#loader');
   Grid _grid;
   String _fileName = 'draw_sth.json';
   final Storage _storage = window.localStorage;
@@ -26,6 +27,8 @@ class Project {
 
   bool get lockGrid => lockCheckbox.checked;
   bool get keepRatio => ratioCheckbox.checked;
+
+  set loading(bool v) => v ? editor.append(loader) : loader.remove();
 
   int get minWidth {
     var rect = editor.client;
@@ -96,6 +99,7 @@ class Project {
   }
 
   void setSrc(String src) {
+    loading = true;
     var sub;
     sub = img.onLoad.listen((e) {
       sub.cancel();
@@ -103,6 +107,7 @@ class Project {
       setSize();
       offset = Point(0, 0);
       zoomWidth = minWidth * 2;
+      loading = false;
     });
     img.src = src;
     urlInput.value = img.src;
@@ -236,8 +241,7 @@ class Project {
         'grid': _grid.toJson()
       };
   void fromJson(Map<String, dynamic> json) {
-    img.src = json['src'];
-    urlInput.value = img.src;
+    loading = true;
     var sub;
     sub = img.onLoad.listen((e) {
       sub.cancel();
@@ -249,7 +253,10 @@ class Project {
       applyCellSize(true, true);
       setSize();
       if (!lockGrid) lockCheckbox.click();
+      loading = false;
     });
+    img.src = json['src'];
+    urlInput.value = img.src;
   }
 
   void download() {
