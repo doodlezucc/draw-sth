@@ -18,17 +18,17 @@ body {
 
 .top-bar {
   display: inline-flex;
-  flex-direction: column;
+  flex-direction: row;
   background-color: #1a1a1a;
   border-bottom: var(--lame-border);
   box-shadow: 0 0 15px #000a;
-  padding: 10px;
-  padding-top: 5px;
+  padding: 6px;
 }
 
-.expand {
-  flex: auto !important;
-  margin: 0 !important;
+.io {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 .controls {
@@ -36,13 +36,11 @@ body {
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
+  width: 100%;
 }
-.controls > *:not(:last-child) {
-  margin-right: 5px;
-}
-.controls > * {
-  margin-top: 5px;
+.section > * {
   flex: none;
+  margin: 2px;
 }
 
 .control {
@@ -103,6 +101,7 @@ button, .btn {
   background: #2a2a2a;
   border: 2px solid white;
   text-transform: uppercase;
+  height: max-content;
 }
 button:hover, .btn:hover {
   border-color: var(--light);
