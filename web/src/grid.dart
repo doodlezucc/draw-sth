@@ -9,12 +9,12 @@ class Grid {
   final DivElement el = querySelector('#grid');
 
   String _gridColor = '#fff';
-  String get gridColor => _gridColor + '6';
+  String get gridColor => _gridColor + '7';
   set gridColor(String gridColor) {
     _gridColor = gridColor;
   }
 
-  String get subGridColor => _gridColor + '2';
+  String get subGridColor => _gridColor + '3';
 
   String _outsideColor = '#000c';
   String get outsideColor => _outsideColor;
@@ -192,6 +192,7 @@ class Grid {
     rectF(rect.left + position.x, rect.top + position.y + size.y,
         rect.left + position.x + size.x, mx);
 
+    ctx.globalCompositeOperation = 'destination-out';
     ctx.strokeStyle = gridColor;
     ctx.strokeRect(
         pos.x.round() - 0.5, pos.y.round() - 0.5, size.x - 1, size.y - 1);
@@ -216,7 +217,7 @@ class Grid {
 
       var strokeEnd = xp(pos + sizeMinus, !x);
 
-      for (var i = 1; i < mainSize / mainCellSize; i++) {
+      for (var i = 1; i <= mainSize / mainCellSize; i++) {
         var main = (mainPos + mainCellSize * i / zoom).round() - 0.5;
         if (i < mainSize / mainCellSize) {
           ctx.strokeStyle = gridColor;

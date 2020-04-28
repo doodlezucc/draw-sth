@@ -8,7 +8,8 @@ import 'io.dart';
 class Project {
   static const zoomSpeed = 10;
 
-  final CanvasElement canvas = querySelector('canvas');
+  final CanvasElement fg = querySelector('canvas#fg');
+  final CanvasElement bg = querySelector('canvas#bg');
   final ImageElement img = querySelector('img');
   final InputElement urlInput = querySelector('#imgUrl');
   final DivElement offsetElement = querySelector('#offset');
@@ -267,15 +268,17 @@ class Project {
   }
 
   void resizeCanvas() {
-    canvas.width = editor.clientWidth;
-    canvas.height = editor.clientHeight;
+    fg.width = editor.clientWidth;
+    fg.height = editor.clientHeight;
+    bg.width = editor.clientWidth;
+    bg.height = editor.clientHeight;
     redraw();
   }
 
   void redraw() {
-    var ctx = canvas.context2D;
+    var bgCtx = bg.context2D;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    bgCtx.clearRect(0, 0, bg.width, bg.height);
 
     var client = editor.client;
     var center = client.bottomRight * 0.5;
@@ -284,7 +287,14 @@ class Project {
         Grid.round(center + (size * -0.5 + offset) * (1 / zoom)),
         Grid.round(center + (size * 0.5 + offset) * (1 / zoom)));
 
-    ctx.drawImageToRect(img, dest);
-    _grid.drawOn(ctx, dest);
+    bgCtx.filter = 'invert(1) grayscale(1) brightness(0.8) contrast(1000)';
+    bgCtx.drawImageToRect(img, dest);
+
+    var fgCtx = fg.context2D;
+    fgCtx.globalCompositeOperation = 'source-over';
+    fgCtx.clearRect(0, 0, fg.width, fg.height);
+
+    fgCtx.drawImageToRect(img, dest);
+    _grid.drawOn(fgCtx, dest);
   }
 }
