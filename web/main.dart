@@ -1,5 +1,8 @@
+import 'dart:html';
+
 import 'src/project.dart';
 
 void main() {
-  Project()..clearStorage();
+  querySelector('#loader').remove();
+  Project();
 }

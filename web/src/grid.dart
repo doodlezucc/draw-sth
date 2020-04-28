@@ -192,10 +192,11 @@ class Grid {
     rectF(rect.left + position.x, rect.top + position.y + size.y,
         rect.left + position.x + size.x, mx);
 
-    ctx.globalCompositeOperation = 'destination-out';
     ctx.strokeStyle = gridColor;
     ctx.strokeRect(
         pos.x.round() - 0.5, pos.y.round() - 0.5, size.x - 1, size.y - 1);
+
+    ctx.globalCompositeOperation = 'destination-out';
 
     void stroke(num x1, num y1, num x2, num y2) {
       ctx.beginPath();
