@@ -87,12 +87,17 @@ class Grid {
 
   Grid(this.project) {
     el.onMouseDown.listen((e) {
+      HtmlElement clicked = e.target;
       var pos1 = position;
       var size1 = size;
 
       void Function(Point<double>) action;
-      if (e.target != el) {
-        var classes = (e.target as HtmlElement).classes;
+      if (clicked != el) {
+        var cursorCss = clicked.style.cursor;
+        document.body.style.cursor = cursorCss;
+        el.style.cursor = cursorCss;
+
+        var classes = clicked.classes;
 
         action = (d) {
           var x = pos1.x;
@@ -152,6 +157,8 @@ class Grid {
 
       var subUp;
       subUp = document.onMouseUp.listen((e) {
+        document.body.style.cursor = '';
+        el.style.cursor = '';
         subMove.cancel();
         subUp.cancel();
         fit();
