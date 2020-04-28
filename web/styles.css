@@ -23,22 +23,25 @@ body {
   border-bottom: var(--lame-border);
   box-shadow: 0 0 15px #000a;
   padding: 10px;
+  padding-top: 5px;
 }
 
 .expand {
-  width: 100%;
   flex: auto !important;
+  margin: 0 !important;
 }
 
 .controls {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
 }
 .controls > *:not(:last-child) {
   margin-right: 5px;
 }
 .controls > * {
+  margin-top: 5px;
   flex: none;
 }
 
