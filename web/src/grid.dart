@@ -51,7 +51,7 @@ class Grid {
   Point<double> _size = Point(400, 400);
   Point<double> get size => _size;
   set size(Point<double> size) {
-    _size = size;
+    _size = clampMin(size, minSize);
     _recalculateElementSize();
   }
 
@@ -103,8 +103,10 @@ class Grid {
           var diff = Point<double>((d.x / _cellSize.x).round() * _cellSize.x,
               (d.y / _cellSize.y).round() * _cellSize.y);
 
+          var maxPosDiff = size1 - minSize;
+
           if (classes.contains('top')) {
-            var v = diff.y;
+            var v = min(diff.y, maxPosDiff.y);
             y += v;
             height -= v;
           }
@@ -115,7 +117,7 @@ class Grid {
             height += diff.y;
           }
           if (classes.contains('left')) {
-            var v = diff.x;
+            var v = min(diff.x, maxPosDiff.x);
             x += v;
             width -= v;
           }
@@ -214,9 +216,9 @@ class Grid {
 
       var strokeEnd = xp(pos + sizeMinus, !x);
 
-      for (var i = 0; i < mainSize / mainCellSize; i++) {
+      for (var i = 1; i < mainSize / mainCellSize; i++) {
         var main = (mainPos + mainCellSize * i / zoom).round() - 0.5;
-        if (i > 0 && i < mainSize / mainCellSize) {
+        if (i < mainSize / mainCellSize) {
           ctx.strokeStyle = gridColor;
           stroke(x ? main : pos.x, x ? pos.y : main, x ? main : strokeEnd,
               x ? strokeEnd : main);
@@ -247,7 +249,7 @@ class Grid {
     cellSize = pointFromJson(json['cellSize']);
     subdivisions = json['subdivisions'];
     position = pointFromJson(json['position']);
-    size = pointFromJson(json['array']);
-    size = Point(size.x * cellSize.x, size.y * cellSize.y);
+    var arr = pointFromJson(json['array']);
+    size = Point(arr.x * cellSize.x, arr.y * cellSize.y);
   }
 }
