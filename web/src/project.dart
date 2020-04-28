@@ -28,7 +28,8 @@ class Project {
   bool get lockGrid => lockCheckbox.checked;
   bool get keepRatio => ratioCheckbox.checked;
 
-  set loading(bool v) => v ? editor.append(loader) : loader.remove();
+  set loading(String s) =>
+      s.isNotEmpty ? editor.append(loader..text = s) : loader.remove();
 
   int get minWidth {
     var rect = editor.client;
@@ -99,7 +100,7 @@ class Project {
   }
 
   void setSrc(String src) {
-    loading = true;
+    loading = 'Loading image...';
     var sub;
     sub = img.onLoad.listen((e) {
       sub.cancel();
@@ -107,7 +108,7 @@ class Project {
       setSize();
       offset = Point(0, 0);
       zoomWidth = minWidth * 2;
-      loading = false;
+      loading = '';
     });
     img.src = src;
     urlInput.value = img.src;
@@ -164,6 +165,49 @@ class Project {
 
     window.onResize.listen((e) => resizeCanvas());
 
+    document.onDragEnter.listen((e) {
+      loading = 'Drop file here!';
+    });
+    window.onDragOver.listen((e) {
+      e.preventDefault();
+    });
+    loader.onDragLeave.listen((e) {
+      loading = '';
+    });
+    window.onDrop.listen((e) {
+      loading = '';
+      e.preventDefault();
+
+      var transfer = e.dataTransfer;
+      var items = transfer.items;
+
+      if (items != null) {
+        // Use DataTransferItemList interface to access the file(s)
+        for (var i = 0; i < items.length; i++) {
+          if (items[i].kind == 'file') {
+            var file = items[i].getAsFile();
+            loading = 'Uploading...';
+            if (file.name.endsWith('.json')) {
+              return uploadFile(file);
+            }
+            return uploadImage(file);
+          } else {
+            var type = items[i].type;
+            var data = transfer.getData(type);
+            if (type == 'text/html') {
+              var src = data.substring(data.indexOf('src=\"') + 5);
+              return setSrc(src.substring(0, src.indexOf('\"')));
+            }
+          }
+        }
+      } else {
+        // Use DataTransfer interface to access the file(s)
+        for (var i = 0; i < transfer.files.length; i++) {
+          print('... file[$i].name = ' + transfer.files[i].name);
+        }
+      }
+    });
+
     editor.onMouseDown.listen((e) {
       HtmlElement el = e.target;
       if (el.matchesWithAncestors('#grid')) return;
@@ -190,13 +234,7 @@ class Project {
     fileInput.onChange.listen((e) {
       var file = fileInput.files[0];
       if (file != null) {
-        _fileName = file.name;
-        var reader = FileReader();
-        reader.onLoad.listen((e) {
-          String jsonString = (e.target as dynamic).result;
-          fromJson(json.decode(jsonString));
-        });
-        reader.readAsText(file);
+        uploadFile(file);
       }
       fileInput.value = '';
     });
@@ -235,6 +273,29 @@ class Project {
     loadFromStorage();
   }
 
+  void uploadImage(File file) {
+    _fileName = file.name;
+    if (!_fileName.endsWith('.json')) {
+      _fileName = '$_fileName.json';
+    }
+    var reader = FileReader();
+    reader.onLoad.listen((e) {
+      String dataUrl = (e.target as dynamic).result;
+      setSrc(dataUrl);
+    });
+    reader.readAsDataUrl(file);
+  }
+
+  void uploadFile(File file) {
+    _fileName = file.name;
+    var reader = FileReader();
+    reader.onLoad.listen((e) {
+      String jsonString = (e.target as dynamic).result;
+      fromJson(json.decode(jsonString));
+    });
+    reader.readAsText(file);
+  }
+
   Map<String, dynamic> toJson() => {
         'src': img.src,
         'offset': pointToJson(offset),
@@ -243,7 +304,6 @@ class Project {
         'grid': _grid.toJson()
       };
   void fromJson(Map<String, dynamic> json) {
-    loading = true;
     var sub;
     sub = img.onLoad.listen((e) {
       sub.cancel();
@@ -258,8 +318,9 @@ class Project {
       if ((shouldLock && !lockGrid) || (!shouldLock && lockGrid)) {
         lockCheckbox.click();
       }
-      loading = false;
+      loading = '';
     });
+    loading = 'Loading image...';
     img.src = json['src'];
     urlInput.value = img.src;
   }
