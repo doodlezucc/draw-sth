@@ -144,6 +144,10 @@ canvas#fg {
   --inset: -10px;
   --corner-size: calc(var(--resizer-size) + 10px);
   z-index: 2;
+  cursor: grab;
+}
+#grid:active {
+  cursor: grabbing;
 }
 #grid > * {
   background-color: transparent;
