@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:html';
 import 'dart:math';
@@ -20,6 +21,8 @@ class Project {
   final InputElement lockCheckbox = querySelector('#lockGrid');
   Grid _grid;
   String _fileName = 'draw_sth.json';
+  final Storage _storage = window.localStorage;
+  bool _updateStorage = false;
 
   bool get lockGrid => lockCheckbox.checked;
   bool get keepRatio => ratioCheckbox.checked;
@@ -215,6 +218,15 @@ class Project {
     document.onMouseWheel.listen((e) {
       zoomWidth -= (zoomSpeed * min(max(e.deltaY, -5), 5)).round();
     });
+
+    Timer.periodic(Duration(seconds: 1), (timer) {
+      if (_updateStorage) {
+        _updateStorage = false;
+        saveToStorage();
+      }
+    });
+
+    loadFromStorage();
   }
 
   Map<String, dynamic> toJson() => {
@@ -251,6 +263,23 @@ class Project {
     aElement.remove();
   }
 
+  void saveToStorage() {
+    _storage['json'] = json.encode(this);
+  }
+
+  void loadFromStorage() {
+    if (_storage.isNotEmpty) {
+      fromJson(json.decode(_storage['json']));
+    } else {
+      initDemo();
+    }
+    _updateStorage = false;
+  }
+
+  void clearStorage() {
+    _storage.clear();
+  }
+
   void reloadStylesheet() {
     LinkElement cssLink = querySelector('link');
     cssLink.href = cssLink.href;
@@ -276,6 +305,7 @@ class Project {
   }
 
   void redraw() {
+    _updateStorage = true;
     var bgCtx = bg.context2D;
 
     bgCtx.clearRect(0, 0, bg.width, bg.height);

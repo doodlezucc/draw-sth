@@ -16,7 +16,7 @@ class Grid {
 
   String get subGridColor => _gridColor + '3';
 
-  String _outsideColor = '#000c';
+  String _outsideColor = '#000d';
   String get outsideColor => _outsideColor;
   set outsideColor(String outsideColor) {
     _outsideColor = outsideColor;
