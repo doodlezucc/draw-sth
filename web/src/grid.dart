@@ -94,11 +94,14 @@ class Grid {
       if (e.target != el) {
         var classes = (e.target as HtmlElement).classes;
 
-        action = (diff) {
+        action = (d) {
           var x = pos1.x;
           var y = pos1.y;
           var width = size1.x;
           var height = size1.y;
+
+          var diff = Point<double>((d.x / _cellSize.x).round() * _cellSize.x,
+              (d.y / _cellSize.y).round() * _cellSize.y);
 
           if (classes.contains('top')) {
             var v = diff.y;
@@ -200,32 +203,38 @@ class Grid {
 
     var subdiv = pow(2, subdivisions) - 1;
 
-    for (var i = 1; i <= this.size.x / cellSize.x; i++) {
-      var x = (pos.x + cellSize.x * i / zoom).round() - 0.5;
-      if (i < this.size.x / cellSize.x) {
-        ctx.strokeStyle = gridColor;
-        stroke(x, pos.y, x, pos.y + sizeMinus.y);
-      }
-      ctx.strokeStyle = subGridColor;
-      for (var sub = 0; sub < subdiv; sub++) {
-        var x1 =
-            (x - (cellSize.x * (sub + 1) / (subdiv + 1)) / zoom).round() - 0.5;
-        stroke(x1, pos.y, x1, pos.y + sizeMinus.y);
+    T xp<T extends num>(Point<T> p, bool horizontal) {
+      return horizontal ? p.x : p.y;
+    }
+
+    void cellLines(bool x) {
+      var mainCellSize = xp(cellSize, x);
+      var mainPos = xp(pos, x);
+      var mainSize = xp(this.size, x);
+
+      var strokeEnd = xp(pos + sizeMinus, !x);
+
+      for (var i = 0; i < mainSize / mainCellSize; i++) {
+        var main = (mainPos + mainCellSize * i / zoom).round() - 0.5;
+        if (i > 0 && i < mainSize / mainCellSize) {
+          ctx.strokeStyle = gridColor;
+          stroke(x ? main : pos.x, x ? pos.y : main, x ? main : strokeEnd,
+              x ? strokeEnd : main);
+        }
+        ctx.strokeStyle = subGridColor;
+        for (var sub = 0; sub < subdiv; sub++) {
+          var mainSub =
+              (main - (mainCellSize * (sub + 1) / (subdiv + 1)) / zoom)
+                      .round() -
+                  0.5;
+          stroke(x ? mainSub : pos.x, x ? pos.y : mainSub,
+              x ? mainSub : strokeEnd, x ? strokeEnd : mainSub);
+        }
       }
     }
-    for (var i = 1; i <= this.size.y / cellSize.y; i++) {
-      var y = (pos.y + cellSize.y * i / zoom).round() - 0.5;
-      if (i < this.size.y / cellSize.y) {
-        ctx.strokeStyle = gridColor;
-        stroke(pos.x, y, pos.x + sizeMinus.x, y);
-      }
-      ctx.strokeStyle = subGridColor;
-      for (var sub = 0; sub < subdiv; sub++) {
-        var y1 =
-            (y - (cellSize.y * (sub + 1) / (subdiv + 1)) / zoom).round() - 0.5;
-        stroke(pos.x, y1, pos.x + sizeMinus.x, y1);
-      }
-    }
+
+    cellLines(true);
+    cellLines(false);
   }
 
   Map<String, dynamic> toJson() => {
