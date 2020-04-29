@@ -179,31 +179,20 @@ class Project {
       e.preventDefault();
 
       var transfer = e.dataTransfer;
-      var items = transfer.items;
 
-      if (items != null) {
-        // Use DataTransferItemList interface to access the file(s)
-        for (var i = 0; i < items.length; i++) {
-          if (items[i].kind == 'file') {
-            var file = items[i].getAsFile();
-            loading = 'Uploading...';
-            if (file.name.endsWith('.json')) {
-              return uploadFile(file);
-            }
-            return uploadImage(file);
-          } else {
-            var type = items[i].type;
-            var data = transfer.getData(type);
-            if (type == 'text/html') {
-              var src = data.substring(data.indexOf('src=\"') + 5);
-              return setSrc(src.substring(0, src.indexOf('\"')));
-            }
-          }
+      for (var i = 0; i < transfer.files.length; i++) {
+        var file = transfer.files[i];
+        loading = 'Uploading...';
+        if (file.name.endsWith('.json')) {
+          return uploadFile(file);
         }
-      } else {
-        // Use DataTransfer interface to access the file(s)
-        for (var i = 0; i < transfer.files.length; i++) {
-          print('... file[$i].name = ' + transfer.files[i].name);
+        return uploadImage(file);
+      }
+      for (var type in transfer.types) {
+        var data = transfer.getData(type);
+        if (type == 'text/html') {
+          var src = data.substring(data.indexOf('src=\"') + 5);
+          return setSrc(src.substring(0, src.indexOf('\"')));
         }
       }
     });
