@@ -69,9 +69,7 @@ body {
 }
 
 input, button, .btn {
-  background-color: white;
   outline: none;
-  color: black;
   text-shadow: none;
   font-family: inherit;
   font-size: 15px;
@@ -81,6 +79,7 @@ input {
   padding: 2px 5px;
   border: none;
   background-color: #fffc;
+  color: black;
 }
 input:enabled:hover, input:focus {
   background-color: #fff;
@@ -98,13 +97,14 @@ input[type=file] {
 button, .btn {
   cursor: pointer;
   padding: 6px 9px;
-  color: inherit;
   background: #2a2a2a;
   border: 2px solid white;
-  text-transform: uppercase;
+  width: max-content;
   height: max-content;
+  border-color: #ccc;
+  color: white;
 }
-button:hover, .btn:hover {
+button:enabled:hover, .btn:hover {
   border-color: var(--light);
   color: var(--light);
 }

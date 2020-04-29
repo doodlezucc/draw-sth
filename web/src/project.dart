@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:html';
+import 'dart:js';
 import 'dart:math';
 
 import 'grid.dart';
@@ -8,6 +9,7 @@ import 'io.dart';
 
 class Project {
   static const zoomSpeed = 10;
+  static const fileExtension = '.grid';
 
   final CanvasElement fg = querySelector('canvas#fg');
   final CanvasElement bg = querySelector('canvas#bg');
@@ -20,7 +22,7 @@ class Project {
   final InputElement lockCheckbox = querySelector('#lockGrid');
   final HtmlElement loader = querySelector('#loader');
   Grid _grid;
-  String _fileName = 'draw_sth.json';
+  String _fileName = 'draw_sth$fileExtension';
   final Storage _storage = window.localStorage;
   bool _updateStorage = false;
 
@@ -214,6 +216,17 @@ class Project {
       });
     });
 
+    querySelector('#loadUrl').onClick.listen((e) {
+      String url = context.callMethod('prompt', [
+        'Enter the URL address of an image you found on the internet.\n'
+            'WARNING: This will discard your current grid!\n\n'
+            '(You can also drag and drop images and grid files into this window!)',
+        ''
+      ]);
+      if (url != null && url.isNotEmpty) {
+        setSrc(url);
+      }
+    });
     querySelector('#save').onClick.listen((e) => download());
     InputElement fileInput = querySelector('#upload');
     fileInput.onChange.listen((e) {
@@ -259,8 +272,8 @@ class Project {
   }
 
   void uploadImage(File file) {
-    if (!_fileName.endsWith('.json')) {
-      _fileName = '$_fileName.json';
+    if (!_fileName.endsWith(fileExtension)) {
+      _fileName = '$_fileName$fileExtension';
     }
     var reader = FileReader();
     reader.onLoad.listen((e) {
@@ -282,13 +295,10 @@ class Project {
   void uploadFile(File file) {
     loading = 'Uploading...';
     _fileName = file.name;
-    if (file.type == 'application/json') {
-      uploadSaveFile(file);
-    } else if (file.type.startsWith('image/')) {
+    if (file.type.startsWith('image/')) {
       uploadImage(file);
     } else {
-      loading = '';
-      window.alert('Please select an image or a save file');
+      uploadSaveFile(file);
     }
   }
 
