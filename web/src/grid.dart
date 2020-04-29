@@ -213,8 +213,6 @@ class Grid {
       ctx.stroke();
     }
 
-    var subdiv = pow(2, subdivisions) - 1;
-
     T xp<T extends num>(Point<T> p, bool horizontal) {
       return horizontal ? p.x : p.y;
     }
@@ -234,9 +232,9 @@ class Grid {
               x ? strokeEnd : main);
         }
         ctx.strokeStyle = subGridColor;
-        for (var sub = 0; sub < subdiv; sub++) {
+        for (var sub = 0; sub < subdivisions; sub++) {
           var mainSub =
-              (main - (mainCellSize * (sub + 1) / (subdiv + 1)) / zoom)
+              (main - (mainCellSize * (sub + 1) / (subdivisions + 1)) / zoom)
                       .round() -
                   0.5;
           stroke(x ? mainSub : pos.x, x ? pos.y : mainSub,
