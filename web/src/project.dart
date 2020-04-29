@@ -12,7 +12,6 @@ class Project {
   final CanvasElement fg = querySelector('canvas#fg');
   final CanvasElement bg = querySelector('canvas#bg');
   final ImageElement img = querySelector('img');
-  final InputElement urlInput = querySelector('#imgUrl');
   final DivElement offsetElement = querySelector('#offset');
   final DivElement editor = querySelector('.image');
   final InputElement ratioCheckbox = querySelector('#keepRatio');
@@ -104,6 +103,9 @@ class Project {
     var sub;
     sub = img.onLoad.listen((e) {
       sub.cancel();
+      if (lockGrid) {
+        lockCheckbox.click();
+      }
       _grid.immediateClamp();
       setSize();
       offset = Point(0, 0);
@@ -111,7 +113,6 @@ class Project {
       loading = '';
     });
     img.src = src;
-    urlInput.value = img.src;
   }
 
   void applyCellSize(bool x, bool y) {
@@ -147,11 +148,11 @@ class Project {
         (v, bonus) => _grid.subdivisions = v.round(),
         () => _grid.subdivisions.toString());
 
-    urlInput.onKeyDown.listen((e) {
-      if (e.keyCode == 13) {
-        setSrc(urlInput.value);
-      }
-    });
+    // urlInput.onKeyDown.listen((e) {
+    //   if (e.keyCode == 13) {
+    //     setSrc(urlInput.value);
+    //   }
+    // });
 
     lockCheckbox.onInput.listen((e) {
       var lock = lockGrid;
@@ -159,7 +160,6 @@ class Project {
       cellX.disabled = lock;
       cellY.disabled = lock;
       ratioCheckbox.disabled = lock;
-      urlInput.disabled = lock;
       _updateStorage = true;
     });
 
@@ -182,11 +182,7 @@ class Project {
 
       for (var i = 0; i < transfer.files.length; i++) {
         var file = transfer.files[i];
-        loading = 'Uploading...';
-        if (file.name.endsWith('.json')) {
-          return uploadFile(file);
-        }
-        return uploadImage(file);
+        return uploadFile(file);
       }
       for (var type in transfer.types) {
         var data = transfer.getData(type);
@@ -263,7 +259,6 @@ class Project {
   }
 
   void uploadImage(File file) {
-    _fileName = file.name;
     if (!_fileName.endsWith('.json')) {
       _fileName = '$_fileName.json';
     }
@@ -275,14 +270,26 @@ class Project {
     reader.readAsDataUrl(file);
   }
 
-  void uploadFile(File file) {
-    _fileName = file.name;
+  void uploadSaveFile(File file) {
     var reader = FileReader();
     reader.onLoad.listen((e) {
       String jsonString = (e.target as dynamic).result;
       fromJson(json.decode(jsonString));
     });
     reader.readAsText(file);
+  }
+
+  void uploadFile(File file) {
+    loading = 'Uploading...';
+    _fileName = file.name;
+    if (file.type == 'application/json') {
+      uploadSaveFile(file);
+    } else if (file.type.startsWith('image/')) {
+      uploadImage(file);
+    } else {
+      loading = '';
+      window.alert('Please select an image or a save file');
+    }
   }
 
   Map<String, dynamic> toJson() => {
@@ -311,7 +318,6 @@ class Project {
     });
     loading = 'Loading image...';
     img.src = json['src'];
-    urlInput.value = img.src;
   }
 
   void download() {

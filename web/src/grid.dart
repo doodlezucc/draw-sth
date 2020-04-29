@@ -78,6 +78,7 @@ class Grid {
     size = clamp(size, minSize, Point<double>(project.size.x, project.size.y));
     position = clamp(position, Point(0, 0),
         Point<double>(project.size.x, project.size.y) - size);
+    fit();
   }
 
   Point<int> get array =>
