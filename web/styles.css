@@ -197,6 +197,7 @@ canvas#fg {
   background-color: #222c;
   text-align: center;
   flex-direction: column;
+  line-height: 1.6;
 }
 
 a {

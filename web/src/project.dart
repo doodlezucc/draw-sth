@@ -26,6 +26,7 @@ class Project {
   Storage _storage;
   bool _updateStorage = false;
 
+  bool get lockUser => loader.parent != null;
   bool get lockGrid => lockCheckbox.checked;
   bool get keepRatio => ratioCheckbox.checked;
 
@@ -220,7 +221,7 @@ class Project {
 
     editor.onMouseDown.listen((e) {
       HtmlElement el = e.target;
-      if (el.matchesWithAncestors('#grid')) return;
+      if (lockUser || el.matchesWithAncestors('#grid')) return;
       var pos1 = offset;
 
       var mouse1 = Point<int>(e.client.x, e.client.y);
@@ -289,6 +290,7 @@ class Project {
               return;
           }
         }
+        if (lockUser) return;
         switch (e.key) {
           case '+':
             zoomWidth += zoomSpeed;
@@ -301,6 +303,7 @@ class Project {
     });
 
     document.onMouseWheel.listen((e) {
+      if (lockUser) return;
       zoomWidth -= (zoomSpeed * min(max(e.deltaY, -5), 5)).round();
     });
 
@@ -432,9 +435,8 @@ class Project {
   }
 
   void redraw() {
-    if (loader.parent != null) return;
-
     _updateStorage = true;
+
     var bgCtx = bg.context2D;
 
     bgCtx.clearRect(0, 0, bg.width, bg.height);
