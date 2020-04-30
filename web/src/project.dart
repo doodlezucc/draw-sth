@@ -100,6 +100,27 @@ class Project {
     });
   }
 
+  void displayLoadError() {
+    var aText = ' URL response';
+
+    loading = 'Oh, come on... failed to load.'
+        '<br>:c'
+        '<br><br>Your URL probably doesn\'t point to an image.'
+        '<a title="${img.src}">Display $aText</a>'
+        '<div class="wrap hidden"><iframe></iframe></div>'
+        '<br>Try the following:'
+        '<br>- Copy the image (instead of its address) and press Ctrl V in this window.'
+        '<br>- Download the image and load it into the editor.';
+
+    loader.querySelector('a').onClick.listen((e) {
+      var hidden = loader.querySelector('div').classes.toggle('hidden');
+      IFrameElement iframe = loader.querySelector('iframe');
+      if (!hidden) iframe.src = img.src;
+
+      loader.querySelector('a').text = (hidden ? 'Display' : 'Hide') + aText;
+    });
+  }
+
   void setSrc(String src) {
     loading = 'Loading image...';
     var sub;
@@ -114,6 +135,7 @@ class Project {
       zoomWidth = minWidth * 2;
       loading = '';
     });
+    print('set src to ' + (src.startsWith('data:') ? 'data' : src));
     img.src = src;
   }
 
@@ -217,13 +239,7 @@ class Project {
       });
     });
 
-    img.onError.listen((e) {
-      print('Oh oh');
-      loading = 'Oh, come on... failed to load.'
-          '<br>:c'
-          '<br><br>Your URL probably doesn\'t point to an image.'
-          '<br>Try downloading the image, then opening it here.';
-    });
+    img.onError.listen((e) => displayLoadError());
 
     querySelector('#loadUrl').onClick.listen((e) {
       String url = context.callMethod('prompt', [
@@ -233,6 +249,10 @@ class Project {
         ''
       ]);
       if (url != null && url.isNotEmpty) {
+        if (url.startsWith('<')) {
+          url = url.substring(url.indexOf('src="') + 5);
+          url = url.substring(0, url.indexOf('"'));
+        }
         setSrc(url);
       }
     });
@@ -244,6 +264,20 @@ class Project {
         uploadFile(file);
       }
       fileInput.value = '';
+    });
+
+    document.onPaste.listen((e) {
+      if (e.target is InputElement) return;
+
+      if (e.clipboardData.files.isNotEmpty) {
+        var file = e.clipboardData.files.first;
+        return uploadFile(file);
+      }
+
+      var url = e.clipboardData.getData('text/plain');
+      if (url != null && url.startsWith('http')) {
+        setSrc(url);
+      }
     });
 
     document.onKeyDown.listen((e) {
@@ -398,6 +432,8 @@ class Project {
   }
 
   void redraw() {
+    if (loader.parent != null) return;
+
     _updateStorage = true;
     var bgCtx = bg.context2D;
 

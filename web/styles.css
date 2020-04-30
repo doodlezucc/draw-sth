@@ -193,7 +193,40 @@ canvas#fg {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 25px;
-  background-color: #0007;
+  font-size: 22px;
+  background-color: #222c;
   text-align: center;
+  flex-direction: column;
+}
+
+a {
+  color: var(--light);
+  cursor: pointer;
+}
+a:hover {
+  color: white;
+}
+
+.wrap {
+  width: calc(100% - 100px);
+  height: 40%;
+  min-height: 15%;
+  overflow: hidden;
+  transition-duration: 0.5s;
+  background-color: white;
+}
+.wrap.hidden {
+  height: 0;
+  min-height: 0;
+}
+
+iframe {
+  width: calc(100% / 0.75);
+  height: calc(100% / 0.75 - 2px);
+  transform: scale(0.75);
+  transform-origin: 0 0;
+  border: var(--lame-border);
+  border-color: white;
+  border-radius: 4px;
+  box-sizing: border-box;
 }
