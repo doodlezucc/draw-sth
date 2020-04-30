@@ -23,7 +23,7 @@ class Project {
   final HtmlElement loader = querySelector('#loader');
   Grid _grid;
   String _fileName = 'draw_sth$fileExtension';
-  final Storage _storage = window.localStorage;
+  Storage _storage;
   bool _updateStorage = false;
 
   bool get lockGrid => lockCheckbox.checked;
@@ -115,6 +115,7 @@ class Project {
       loading = '';
     });
     img.src = src;
+    _updateStorage = true;
   }
 
   void applyCellSize(bool x, bool y) {
@@ -188,6 +189,7 @@ class Project {
       }
       for (var type in transfer.types) {
         var data = transfer.getData(type);
+        //print('$type: $data');
         if (type == 'text/html') {
           var src = data.substring(data.indexOf('src=\"') + 5);
           return setSrc(src.substring(0, src.indexOf('\"')));
@@ -214,6 +216,10 @@ class Project {
         subMove.cancel();
         subUp.cancel();
       });
+    });
+
+    img.onError.listen((e) {
+      print('Oh oh');
     });
 
     querySelector('#loadUrl').onClick.listen((e) {
@@ -261,14 +267,20 @@ class Project {
       zoomWidth -= (zoomSpeed * min(max(e.deltaY, -5), 5)).round();
     });
 
-    Timer.periodic(Duration(seconds: 1), (timer) {
-      if (_updateStorage) {
-        _updateStorage = false;
-        saveToStorage();
-      }
-    });
+    try {
+      _storage = window.localStorage;
+      Timer.periodic(Duration(seconds: 1), (timer) {
+        if (_updateStorage) {
+          _updateStorage = false;
+          saveToStorage();
+        }
+      });
 
-    loadFromStorage();
+      loadFromStorage();
+    } catch (e) {
+      print('Saving in-browser not allowed... launching demo!');
+      initDemo();
+    }
   }
 
   void uploadImage(File file) {
@@ -400,6 +412,7 @@ class Project {
 
     var fgCtx = fg.context2D;
     fgCtx.globalCompositeOperation = 'source-over';
+    fgCtx.imageSmoothingQuality = 'high';
     fgCtx.clearRect(0, 0, fg.width, fg.height);
 
     fgCtx.drawImageToRect(img, dest);
