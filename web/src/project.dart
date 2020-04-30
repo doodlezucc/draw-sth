@@ -30,8 +30,18 @@ class Project {
   bool get lockGrid => lockCheckbox.checked;
   bool get keepRatio => ratioCheckbox.checked;
 
-  set loading(String s) =>
-      s.isNotEmpty ? editor.append(loader..innerHtml = s) : loader.remove();
+  set loading(String s) {
+    var blockParent = querySelector('.controls.section');
+    if (s.isNotEmpty) {
+      if (blockParent.querySelector('.block') == null) {
+        blockParent.append(DivElement()..className = 'block');
+      }
+      editor.append(loader..innerHtml = s);
+    } else {
+      blockParent.querySelector('.block')?.remove();
+      loader.remove();
+    }
+  }
 
   int get minWidth {
     var rect = editor.client;
@@ -110,8 +120,8 @@ class Project {
         '<a title="${img.src}">Display $aText</a>'
         '<div class="wrap hidden"><iframe></iframe></div>'
         '<br>Try the following:'
-        '<br>- Copy the image (instead of its address) and press Ctrl V in this window.'
-        '<br>- Download the image and load it into the editor.';
+        '<br>Copy the image (instead of its address) and press Ctrl V in this window.'
+        '<br>or<br>Download the image and load it into the editor.';
 
     loader.querySelector('a').onClick.listen((e) {
       var hidden = loader.querySelector('div').classes.toggle('hidden');
@@ -131,10 +141,10 @@ class Project {
         lockCheckbox.click();
       }
       _grid.immediateClamp();
-      setSize();
       offset = Point(0, 0);
       zoomWidth = minWidth * 2;
       loading = '';
+      setSize();
     });
     print('set src to ' + (src.startsWith('data:') ? 'data' : src));
     img.src = src;
@@ -371,12 +381,12 @@ class Project {
       (querySelector('#subdivisions') as InputElement).value =
           _grid.subdivisions.toString();
       applyCellSize(true, true);
+      loading = '';
       setSize();
       bool shouldLock = json['lock'] ?? true;
       if ((shouldLock && !lockGrid) || (!shouldLock && lockGrid)) {
         lockCheckbox.click();
       }
-      loading = '';
     });
     loading = 'Loading image...';
     img.src = json['src'];
@@ -431,7 +441,7 @@ class Project {
     fg.height = editor.clientHeight;
     bg.width = editor.clientWidth;
     bg.height = editor.clientHeight;
-    redraw();
+    if (!lockUser) redraw();
   }
 
   void redraw() {
