@@ -30,7 +30,7 @@ class Project {
   bool get keepRatio => ratioCheckbox.checked;
 
   set loading(String s) =>
-      s.isNotEmpty ? editor.append(loader..text = s) : loader.remove();
+      s.isNotEmpty ? editor.append(loader..innerHtml = s) : loader.remove();
 
   int get minWidth {
     var rect = editor.client;
@@ -115,7 +115,6 @@ class Project {
       loading = '';
     });
     img.src = src;
-    _updateStorage = true;
   }
 
   void applyCellSize(bool x, bool y) {
@@ -220,6 +219,10 @@ class Project {
 
     img.onError.listen((e) {
       print('Oh oh');
+      loading = 'Oh, come on... failed to load.'
+          '<br>:c'
+          '<br><br>Your URL probably doesn\'t point to an image.'
+          '<br>Try downloading the image, then opening it here.';
     });
 
     querySelector('#loadUrl').onClick.listen((e) {
