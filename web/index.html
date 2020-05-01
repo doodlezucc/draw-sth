@@ -18,12 +18,18 @@
     <div class="controls section">
       <div class="control">
         <label>Lock:</label>
-        <input id="lockGrid" type="checkbox">
+        <label class="checkbox">
+          <input id="lockGrid" type="checkbox">
+          <span></span>
+        </label>
       </div>
       <div class="control">
         <label>Cell Size:</label>
         <input id="cellX" type="number" min="10" value="50">
-        <input id="keepRatio" type="checkbox" tabindex="-1" title="Keep aspect ratio">
+        <label class="checkbox" title="Keep aspect ratio">
+          <input id="keepRatio" type="checkbox" tabindex="-1">
+          <span></span>
+        </label>
         <input id="cellY" type="number" min="10" value="50">
       </div>
       <div class="control">
