@@ -281,10 +281,10 @@ class Project {
       if (lockUser || el.matchesWithAncestors('#grid')) return;
       var pos1 = offset;
 
-      var mouse1 = Point<int>(e.client.x, e.client.y);
+      var mouse1 = e.client;
       var subMove = document.onMouseMove.listen((e) {
         if (e.movement.magnitude == 0) return;
-        var diff = (Point<int>(e.client.x, e.client.y) - mouse1);
+        var diff = e.client - mouse1;
 
         offset = pos1 + diff * zoom;
         redraw();
