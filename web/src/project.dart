@@ -21,6 +21,8 @@ class Project {
   final InputElement cellY = querySelector('#cellY');
   final InputElement lockCheckbox = querySelector('#lockGrid');
   final HtmlElement loader = querySelector('#loader');
+  final DivElement _cursorTag = querySelector('#cursorTag');
+  Point _mousePos;
   Grid _grid;
   String _fileName = 'draw_sth$fileExtension';
   Storage _storage;
@@ -40,6 +42,7 @@ class Project {
     } else {
       blockParent.querySelector('.block')?.remove();
       loader.remove();
+      updateCursorTagString();
     }
   }
 
@@ -155,6 +158,41 @@ class Project {
     if (y) cellY.value = _grid.cellSize.y.toStringAsFixed(1);
   }
 
+  void moveCursorTag(MouseEvent e) {
+    _mousePos = e.client;
+    if (lockUser || e.movement.magnitude == 0) return;
+    _cursorTag.style.left = '${e.client.x - editor.offsetLeft}px';
+    _cursorTag.style.top = '${e.client.y - editor.offsetTop}px';
+
+    if (e.buttons == 0) {
+      updateCursorTagString();
+    }
+  }
+
+  void updateCursorTagString() {
+    if (_mousePos == null) return;
+    var client = editor.client;
+    var center = client.bottomRight * 0.5;
+    var gridStart = Grid.round(
+        center + (size * -0.5 + offset + _grid.position) * (1 / zoom));
+    var cursor = Grid.round(_mousePos - editor.offset.topLeft);
+    var cursorInGrid = cursor - gridStart;
+    var s = '';
+    if (cursorInGrid.x >= 0 &&
+        cursorInGrid.y >= 0 &&
+        cursorInGrid.x * zoom < _grid.size.x &&
+        cursorInGrid.y * zoom < _grid.size.y) {
+      var cells = Point(
+          1 + ((cursorInGrid.x / _grid.cellSize.x) * zoom).floor(),
+          _grid.array.y - ((cursorInGrid.y / _grid.cellSize.y) * zoom).floor());
+      s = '${cells.x},${cells.y}';
+    }
+
+    setCursorTagString(s);
+  }
+
+  void setCursorTagString(String s) => _cursorTag.children.first.text = s;
+
   Project() {
     _grid = Grid(this);
 
@@ -192,6 +230,7 @@ class Project {
     lockCheckbox.onInput.listen((e) {
       var lock = lockGrid;
       _grid.el.style.display = lock ? 'none' : 'block';
+      _cursorTag.style.display = lock ? 'block' : 'none';
       cellX.disabled = lock;
       cellY.disabled = lock;
       ratioCheckbox.disabled = lock;
@@ -199,6 +238,9 @@ class Project {
     });
 
     window.onResize.listen((e) => resizeCanvas());
+    resizeCanvas();
+
+    window.onMouseMove.listen(moveCursorTag);
 
     document.onDragEnter.listen((e) {
       loading = 'Drop file here!';
@@ -433,7 +475,8 @@ class Project {
     _grid.position = _grid.position;
     _grid.size = _grid.size;
     offset = offset;
-    resizeCanvas();
+    updateCursorTagString();
+    if (!lockUser) redraw();
   }
 
   void resizeCanvas() {
