@@ -354,6 +354,39 @@ class Project {
           case '-':
             zoomWidth -= zoomSpeed;
             return;
+          case 'l':
+            lockCheckbox.click();
+            return;
+          case 'o':
+            e.preventDefault();
+            if (e.ctrlKey) fileInput.click();
+            return;
+          case 's':
+            e.preventDefault();
+            if (e.ctrlKey) download();
+            return;
+        }
+        if (lockGrid) return;
+        var speed = zoom;
+        var diffX = 0.0;
+        var diffY = 0.0;
+        switch (e.keyCode) {
+          case 37: //left
+            diffX += -1;
+            break;
+          case 38: //up
+            diffY += -1;
+            break;
+          case 39: //right
+            diffX += 1;
+            break;
+          case 40: //down
+            diffY += 1;
+            break;
+        }
+        if (diffX != 0 || diffY != 0) {
+          _grid.position = _grid.position + Point(diffX, diffY) * speed;
+          redraw();
         }
       }
     });
