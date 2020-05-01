@@ -185,7 +185,7 @@ class Project {
       var cells = Point(
           1 + ((cursorInGrid.x / _grid.cellSize.x) * zoom).floor(),
           _grid.array.y - ((cursorInGrid.y / _grid.cellSize.y) * zoom).floor());
-      s = '${cells.x},${cells.y}';
+      s = 'x: ${cells.x}, y: ${cells.y}';
     }
 
     setCursorTagString(s);
@@ -230,7 +230,7 @@ class Project {
     lockCheckbox.onInput.listen((e) {
       var lock = lockGrid;
       _grid.el.style.display = lock ? 'none' : 'block';
-      _cursorTag.style.display = lock ? 'block' : 'none';
+      setCursorTagString('');
       cellX.disabled = lock;
       cellY.disabled = lock;
       ratioCheckbox.disabled = lock;

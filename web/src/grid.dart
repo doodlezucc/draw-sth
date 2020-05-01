@@ -94,6 +94,7 @@ class Grid {
 
       void Function(Point<double>) action;
       if (clicked != el) {
+        project.setCursorTagString('${array.x}x${array.y}');
         var cursorCss = clicked.style.cursor;
         document.body.style.cursor = cursorCss;
         el.style.cursor = cursorCss;
@@ -130,6 +131,7 @@ class Grid {
 
           size = Point(width, height);
           position = Point(x, y);
+          project.setCursorTagString('${array.x}x${array.y}');
         };
       } else {
         action = (diff) {
@@ -163,6 +165,7 @@ class Grid {
         subMove.cancel();
         subUp.cancel();
         fit();
+        project.updateCursorTagString();
       });
     });
   }
