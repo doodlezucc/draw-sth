@@ -302,8 +302,7 @@ class Project {
     querySelector('#loadUrl').onClick.listen((e) {
       String url = context.callMethod('prompt', [
         'Enter the URL address of an image you found on the internet.\n'
-            'WARNING: This will discard your current grid!\n\n'
-            '(You can also drag and drop images and grid files into this window!)',
+            'WARNING: This will discard your current grid!',
         ''
       ]);
       if (url != null && url.isNotEmpty) {
