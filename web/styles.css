@@ -69,6 +69,7 @@ body {
 
 .control, button, .btn {
   border: var(--lame-border);
+  background: #2a2a2a;
 }
 
 input, button, .btn {
@@ -100,7 +101,6 @@ input[type=file] {
 button, .btn {
   cursor: pointer;
   padding: 6px 9px;
-  background: #2a2a2a;
   border: 2px solid white;
   width: max-content;
   height: max-content;
@@ -110,6 +110,11 @@ button, .btn {
 button:enabled:hover, .btn:hover {
   border-color: var(--light);
   color: var(--light);
+}
+button:disabled, .btn:disabled {
+  pointer-events: none;
+  border-color: #888;
+  color: #888;
 }
 
 div.image {

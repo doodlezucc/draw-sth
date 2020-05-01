@@ -22,6 +22,7 @@ class Project {
   final InputElement lockCheckbox = querySelector('#lockGrid');
   final HtmlElement loader = querySelector('#loader');
   final DivElement _cursorTag = querySelector('#cursorTag');
+  final ButtonElement saveButton = querySelector('#save');
   Point _mousePos;
   Grid _grid;
   String _fileName = 'draw_sth$fileExtension';
@@ -34,6 +35,7 @@ class Project {
 
   set loading(String s) {
     var blockParent = querySelector('.controls.section');
+    saveButton.disabled = s.isNotEmpty;
     if (s.isNotEmpty) {
       if (blockParent.querySelector('.block') == null) {
         blockParent.append(DivElement()..className = 'block');
@@ -149,7 +151,7 @@ class Project {
       loading = '';
       setSize();
     });
-    print('set src to ' + (src.startsWith('data:') ? 'data' : src));
+    print('set src to ' + (src.startsWith('data:') ? 'DATA' : src));
     img.src = src;
   }
 
@@ -242,17 +244,19 @@ class Project {
 
     window.onMouseMove.listen(moveCursorTag);
 
-    document.onDragEnter.listen((e) {
+    var previousLoading = '';
+
+    editor.onDragEnter.listen((e) {
+      previousLoading = loader.innerHtml;
       loading = 'Drop file here!';
     });
     window.onDragOver.listen((e) {
       e.preventDefault();
     });
-    loader.onDragLeave.listen((e) {
-      loading = '';
+    editor.onDragLeave.listen((e) {
+      loading = previousLoading;
     });
     window.onDrop.listen((e) {
-      loading = '';
       e.preventDefault();
 
       var transfer = e.dataTransfer;
@@ -269,6 +273,7 @@ class Project {
           return setSrc(src.substring(0, src.indexOf('\"')));
         }
       }
+      loading = previousLoading;
     });
 
     editor.onMouseDown.listen((e) {
@@ -309,7 +314,7 @@ class Project {
         setSrc(url);
       }
     });
-    querySelector('#save').onClick.listen((e) => download());
+    saveButton.onClick.listen((e) => download());
     InputElement fileInput = querySelector('#upload');
     fileInput.onChange.listen((e) {
       var file = fileInput.files[0];
@@ -390,8 +395,15 @@ class Project {
   void uploadSaveFile(File file) {
     var reader = FileReader();
     reader.onLoad.listen((e) {
-      String jsonString = (e.target as dynamic).result;
-      fromJson(json.decode(jsonString));
+      try {
+        String jsonString = (e.target as dynamic).result;
+        fromJson(json.decode(jsonString));
+      } catch (err, trace) {
+        print('$err\n--- Stacktrace ---\n$trace');
+        loading = 'Loading your file as a savefile failed.'
+            '<br>$err'
+            '<br><br>Try loading an image or a valid $fileExtension file.';
+      }
     });
     reader.readAsText(file);
   }
@@ -414,15 +426,16 @@ class Project {
         'grid': _grid.toJson()
       };
   void fromJson(Map<String, dynamic> json) {
+    _offset = pointFromJson(json['offset']);
+    _zoomWidth = json['zoomWidth'];
+    _grid.fromJson(json['grid']);
+    (querySelector('#subdivisions') as InputElement).value =
+        _grid.subdivisions.toString();
+    applyCellSize(true, true);
+
     var sub;
     sub = img.onLoad.listen((e) {
       sub.cancel();
-      _offset = pointFromJson(json['offset']);
-      _zoomWidth = json['zoomWidth'];
-      _grid.fromJson(json['grid']);
-      (querySelector('#subdivisions') as InputElement).value =
-          _grid.subdivisions.toString();
-      applyCellSize(true, true);
       loading = '';
       setSize();
       bool shouldLock = json['lock'] ?? true;
@@ -468,7 +481,9 @@ class Project {
   }
 
   void initDemo() {
-    setSrc('jon.png');
+    //setSrc('jon.png');
+    loading = 'Start out by dragging an image into this window,'
+        '<br>or by clicking on one of the buttons at the top right!';
   }
 
   void setSize() {
