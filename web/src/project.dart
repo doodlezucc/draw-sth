@@ -27,7 +27,17 @@ class Project {
   final SpanElement storageWarning = querySelector('.warning');
   Point _mousePos;
   Grid _grid;
-  String _fileName = 'draw_sth$fileExtension';
+  String _fileName;
+  set fileName(String s) {
+    if (s.contains('.')) {
+      _fileName = s.substring(0, s.lastIndexOf('.'));
+    } else {
+      _fileName = s;
+    }
+    print('fileName = $_fileName');
+    if (_storage != null) _storage['fileName'] = _fileName;
+  }
+
   Storage _storage;
   bool _updateStorage = false;
   bool _blockStorage = false;
@@ -154,6 +164,7 @@ class Project {
       }
       if (oldWidth > 0) {
         _grid.cellSize = _grid.cellSize * (img.width / oldWidth);
+        applyCellSize(true, true);
       }
       _grid.immediateClamp();
       offset = Point(0, 0);
@@ -302,7 +313,14 @@ class Project {
         //print('$type: $data');
         if (type == 'text/html') {
           var src = data.substring(data.indexOf('src=\"') + 5);
-          return setSrc(src.substring(0, src.indexOf('\"')));
+          src = src.substring(0, src.indexOf('\"'));
+          if (data.contains('alt="')) {
+            var alt = data.substring(data.indexOf('alt="') + 5);
+            fileName = alt.substring(0, alt.indexOf('"'));
+          } else {
+            fileName = 'web-image';
+          }
+          return setSrc(src);
         }
       }
       loading = previousLoading;
@@ -342,6 +360,12 @@ class Project {
           url = url.substring(url.indexOf('src="') + 5);
           url = url.substring(0, url.indexOf('"'));
         }
+        if (url.contains('alt="')) {
+          var alt = url.substring(url.indexOf('alt="') + 5);
+          fileName = alt.substring(0, alt.indexOf('"'));
+        } else {
+          fileName = 'web-image';
+        }
         setSrc(url);
       }
     });
@@ -366,6 +390,7 @@ class Project {
 
       var url = e.clipboardData.getData('text/plain');
       if (url != null && url.startsWith('http')) {
+        fileName = 'web-image';
         setSrc(url);
       }
     });
@@ -434,6 +459,7 @@ class Project {
       if (_storage['readWarning'] == 'true') {
         storageWarning.classes.remove('new');
       }
+      _fileName = _storage['fileName'];
       Timer.periodic(Duration(seconds: 1), (timer) {
         if (_updateStorage) {
           _updateStorage = false;
@@ -471,13 +497,10 @@ class Project {
     mainCtx.drawImage(fg, 0, 0);
 
     var data = await canvas.toDataUrl();
-    download('export.png', data);
+    download(_fileName + '.png', data);
   }
 
   void uploadImage(File file) {
-    if (!_fileName.endsWith(fileExtension)) {
-      _fileName = '$_fileName$fileExtension';
-    }
     var reader = FileReader();
     reader.onLoad.listen((e) {
       String dataUrl = (e.target as dynamic).result;
@@ -504,7 +527,7 @@ class Project {
 
   void uploadFile(File file) {
     loading = 'Uploading...';
-    _fileName = file.name;
+    fileName = file.name;
     if (file.type.startsWith('image/')) {
       uploadImage(file);
     } else {
@@ -551,7 +574,7 @@ class Project {
 
   void downloadGrid() {
     download(
-        _fileName,
+        _fileName + fileExtension,
         'data:text/json;charset=utf-8,' +
             Uri.encodeComponent(toJsonString(this)));
   }
@@ -560,7 +583,6 @@ class Project {
     if (!_blockStorage) {
       try {
         _storage['json'] = json.encode(this);
-        _blockStorage = false;
       } catch (e) {
         _blockStorage = true;
       } finally {
