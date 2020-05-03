@@ -23,11 +23,13 @@ class Project {
   final HtmlElement loader = querySelector('#loader');
   final DivElement _cursorTag = querySelector('#cursorTag');
   final ButtonElement saveButton = querySelector('#save');
+  final SpanElement storageWarning = querySelector('.warning');
   Point _mousePos;
   Grid _grid;
   String _fileName = 'draw_sth$fileExtension';
   Storage _storage;
   bool _updateStorage = false;
+  bool _blockStorage = false;
 
   bool get lockUser => loader.parent != null;
   bool get lockGrid => lockCheckbox.checked;
@@ -138,6 +140,7 @@ class Project {
   }
 
   void setSrc(String src) {
+    var oldWidth = img.width;
     loading = 'Loading image...';
     var sub;
     sub = img.onLoad.listen((e) {
@@ -145,11 +148,23 @@ class Project {
       if (lockGrid) {
         lockCheckbox.click();
       }
+      if (oldWidth > 0) {
+        _grid.cellSize = _grid.cellSize * (img.width / oldWidth);
+      }
       _grid.immediateClamp();
       offset = Point(0, 0);
       zoomWidth = minWidth * 2;
       loading = '';
       setSize();
+
+      try {
+        _storage['json'] = json.encode(this);
+        _blockStorage = false;
+      } catch (e) {
+        _blockStorage = true;
+      } finally {
+        storageWarning.classes.toggle('hidden', !_blockStorage);
+      }
     });
     print('set src to ' + (src.startsWith('data:') ? 'DATA' : src));
     img.src = src;
@@ -199,7 +214,7 @@ class Project {
     _grid = Grid(this);
 
     registerIntInput(cellX, (v, bonus) {
-      if (v < 25 || !bonus) return;
+      if (v < 10 || !bonus) return;
       _grid.cellSize =
           Point(v, _grid.cellSize.y * (keepRatio ? v / _grid.cellSize.x : 1));
       applyCellSize(false, true);
@@ -208,7 +223,7 @@ class Project {
       return _grid.cellSize.x.toStringAsFixed(1);
     }, onMouseUp: _grid.fit);
     registerIntInput(cellY, (v, bonus) {
-      if (v < 25 || !bonus) return;
+      if (v < 10 || !bonus) return;
       _grid.cellSize =
           Point(_grid.cellSize.x * (keepRatio ? v / _grid.cellSize.y : 1), v);
       applyCellSize(true, false);
@@ -243,6 +258,19 @@ class Project {
     resizeCanvas();
 
     window.onMouseMove.listen(moveCursorTag);
+
+    window.onBeforeUnload.listen((e) {
+      if (_blockStorage) {
+        (e as BeforeUnloadEvent).returnValue =
+            'You may want to download your grid before leaving the site.';
+      }
+    });
+
+    storageWarning.onMouseEnter.listen((e) {
+      if (storageWarning.classes.remove('new')) {
+        _storage['readWarning'] = 'true';
+      }
+    });
 
     var previousLoading = '';
 
@@ -398,6 +426,9 @@ class Project {
 
     try {
       _storage = window.localStorage;
+      if (_storage['readWarning'] == 'true') {
+        storageWarning.classes.remove('new');
+      }
       Timer.periodic(Duration(seconds: 1), (timer) {
         if (_updateStorage) {
           _updateStorage = false;
@@ -408,6 +439,13 @@ class Project {
       loadFromStorage();
     } catch (e) {
       print('Saving in-browser not allowed... launching demo!');
+      _blockStorage = true;
+      storageWarning.classes.remove('new');
+      var div = storageWarning.querySelector('div');
+      var html = div.innerHtml;
+      html = html.substring(html.indexOf('<br>'));
+      html = html.substring(0, html.indexOf('<', 4));
+      div.innerHtml = '<span>Not allowed to save in-browser!</span>' + html;
       initDemo();
     }
   }
@@ -491,7 +529,16 @@ class Project {
   }
 
   void saveToStorage() {
-    _storage['json'] = json.encode(this);
+    if (!_blockStorage) {
+      try {
+        _storage['json'] = json.encode(this);
+        _blockStorage = false;
+      } catch (e) {
+        _blockStorage = true;
+      } finally {
+        storageWarning.classes.toggle('hidden', !_blockStorage);
+      }
+    }
   }
 
   void loadFromStorage() {

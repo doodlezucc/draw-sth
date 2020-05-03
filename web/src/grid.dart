@@ -63,7 +63,7 @@ class Grid {
   Point<double> _cellSize = Point<double>(50, 50);
   Point<double> get cellSize => _cellSize;
   set cellSize(Point<double> size) {
-    _cellSize = clampMin(size, Point(25, 25));
+    _cellSize = clampMin(size, Point(10, 10));
   }
 
   void fit() {
