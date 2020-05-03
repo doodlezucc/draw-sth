@@ -174,8 +174,7 @@ class Grid {
     return Point<int>(p.x.round(), p.y.round());
   }
 
-  void drawOn(CanvasRenderingContext2D ctx, Rectangle<int> rect) {
-    var zoom = project.zoom;
+  void drawOn(CanvasRenderingContext2D ctx, Rectangle<int> rect, double zoom) {
     var position = round(Point(this.position.x / zoom, this.position.y / zoom));
     var pos = rect.topLeft + position + Point<int>(1, 1);
     var size = Point<int>(this.size.x ~/ zoom + 1, this.size.y ~/ zoom + 1);

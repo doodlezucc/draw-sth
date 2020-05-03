@@ -23,6 +23,7 @@ class Project {
   final HtmlElement loader = querySelector('#loader');
   final DivElement _cursorTag = querySelector('#cursorTag');
   final ButtonElement saveButton = querySelector('#save');
+  final ButtonElement exportButton = querySelector('#export');
   final SpanElement storageWarning = querySelector('.warning');
   Point _mousePos;
   Grid _grid;
@@ -31,6 +32,8 @@ class Project {
   bool _updateStorage = false;
   bool _blockStorage = false;
 
+  String get filter => 'blur(5px)';
+
   bool get lockUser => loader.parent != null;
   bool get lockGrid => lockCheckbox.checked;
   bool get keepRatio => ratioCheckbox.checked;
@@ -38,6 +41,7 @@ class Project {
   set loading(String s) {
     var blockParent = querySelector('.controls.section');
     saveButton.disabled = s.isNotEmpty;
+    exportButton.disabled = s.isNotEmpty;
     if (s.isNotEmpty) {
       if (blockParent.querySelector('.block') == null) {
         blockParent.append(DivElement()..className = 'block');
@@ -341,7 +345,8 @@ class Project {
         setSrc(url);
       }
     });
-    saveButton.onClick.listen((e) => download());
+    saveButton.onClick.listen((e) => downloadGrid());
+    exportButton.onClick.listen((e) => export());
     InputElement fileInput = querySelector('#upload');
     fileInput.onChange.listen((e) {
       var file = fileInput.files[0];
@@ -391,7 +396,7 @@ class Project {
             return;
           case 's':
             e.preventDefault();
-            if (e.ctrlKey) download();
+            if (e.ctrlKey) downloadGrid();
             return;
         }
         if (lockGrid) return;
@@ -448,6 +453,25 @@ class Project {
       div.innerHtml = '<span>Not allowed to save in-browser!</span>' + html;
       initDemo();
     }
+  }
+
+  void export() async {
+    // Worst practice, duplicate code
+    var canvas = CanvasElement(width: img.width, height: img.height);
+    var mainCtx = canvas.context2D;
+    mainCtx.filter = 'invert(1) grayscale(1) brightness(0.8) contrast(1000)';
+    mainCtx.drawImage(img, 0, 0);
+
+    var fg = CanvasElement(width: img.width, height: img.height);
+    var fgCtx = fg.context2D;
+    fgCtx.drawImage(img, 0, 0);
+    _grid.drawOn(fgCtx, Rectangle(0, 0, img.width, img.height), 1);
+
+    mainCtx.filter = 'none';
+    mainCtx.drawImage(fg, 0, 0);
+
+    var data = await canvas.toDataUrl();
+    download('export.png', data);
   }
 
   void uploadImage(File file) {
@@ -517,15 +541,19 @@ class Project {
     img.src = json['src'];
   }
 
-  void download() {
-    var jsonString = toJsonString(this);
-    var aElement = AnchorElement(
-        href:
-            'data:text/json;charset=utf-8,' + Uri.encodeComponent(jsonString));
-    aElement.download = _fileName;
+  void download(String fileName, String href) {
+    var aElement = AnchorElement(href: href);
+    aElement.download = fileName;
     document.body.append(aElement);
     aElement.click();
     aElement.remove();
+  }
+
+  void downloadGrid() {
+    download(
+        _fileName,
+        'data:text/json;charset=utf-8,' +
+            Uri.encodeComponent(toJsonString(this)));
   }
 
   void saveToStorage() {
@@ -584,7 +612,7 @@ class Project {
   void redraw() {
     _updateStorage = true;
 
-    var bgCtx = bg.context2D;
+    CanvasRenderingContext2D bgCtx = bg.getContext('2d', {'alpha': false});
 
     bgCtx.clearRect(0, 0, bg.width, bg.height);
 
@@ -604,6 +632,6 @@ class Project {
     fgCtx.clearRect(0, 0, fg.width, fg.height);
 
     fgCtx.drawImageToRect(img, dest);
-    _grid.drawOn(fgCtx, dest);
+    _grid.drawOn(fgCtx, dest, zoom);
   }
 }
