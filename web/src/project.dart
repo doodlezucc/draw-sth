@@ -490,19 +490,7 @@ class Project {
   }
 
   void export() async {
-    var canvas = CanvasElement(width: img.width, height: img.height);
-    var mainCtx = canvas.context2D;
-    mainCtx.drawImage(Canvases.inverted.e, 0, 0);
-
-    var fg = CanvasElement(width: img.width, height: img.height);
-    var fgCtx = fg.context2D;
-    fgCtx.drawImage(img, 0, 0);
-    grid.drawOn(fgCtx, Rectangle(0, 0, img.width, img.height), 1);
-
-    mainCtx.filter = 'none';
-    mainCtx.drawImage(fg, 0, 0);
-
-    var data = await canvas.toDataUrl();
+    var data = Canvases.editorExport();
     download(_fileName + '.png', data);
   }
 
@@ -623,7 +611,7 @@ class Project {
   }
 
   void resizeCanvas() {
-    Canvases.onResizeEditor();
+    Canvases.resizeEditor(editor.clientWidth, editor.clientHeight);
     if (!lockUser) redraw();
   }
 
