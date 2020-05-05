@@ -73,7 +73,12 @@ class Project {
   int get zoomWidth => _zoomWidth;
   set zoomWidth(int zoomWidth) {
     _zoomWidth = max(minWidth, zoomWidth);
-    setSize();
+
+    grid.position = grid.position;
+    grid.size = grid.size;
+    offset = offset;
+    updateCursorTagString();
+    if (!lockUser) redraw();
   }
 
   double get zoom => img.width / zoomWidth;
@@ -153,14 +158,14 @@ class Project {
   }
 
   void onImageSet() {
-    print('image set');
+    var src = img.src;
+    print('set src to ' + (src.startsWith('data:') ? 'DATA' : src));
     loading = '';
     Canvases.filteredImg.resize(img.width, img.height);
     Canvases.inverted.resize(img.width, img.height);
-    setSize();
 
     try {
-      _storage['src'] = img.src;
+      _storage['src'] = src;
       _blockStorage = false;
     } catch (e) {
       _blockStorage = true;
@@ -189,7 +194,6 @@ class Project {
 
       saveToStorage();
     });
-    print('set src to ' + (src.startsWith('data:') ? 'DATA' : src));
     img.src = src;
   }
 
@@ -548,6 +552,7 @@ class Project {
     sub = img.onLoad.listen((e) {
       sub.cancel();
       onImageSet();
+      zoomWidth = zoomWidth;
       bool shouldLock = json['lock'] ?? true;
       if ((shouldLock && !lockGrid) || (!shouldLock && lockGrid)) {
         lockCheckbox.click();
@@ -600,14 +605,6 @@ class Project {
     //setSrc('jon.png');
     loading = 'Start out by dragging an image into this window,'
         '<br>or by clicking on one of the buttons at the top right!';
-  }
-
-  void setSize() {
-    grid.position = grid.position;
-    grid.size = grid.size;
-    offset = offset;
-    updateCursorTagString();
-    if (!lockUser) redraw();
   }
 
   void resizeCanvas() {
