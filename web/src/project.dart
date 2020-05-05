@@ -236,6 +236,24 @@ class Project {
 
   void setCursorTagString(String s) => _cursorTag.children.first.text = s;
 
+  void loadFromString(String s) {
+    var src = s;
+    var hasName = false;
+    if (s.startsWith('<')) {
+      if (s.contains('alt="')) {
+        var alt = s.substring(s.indexOf('alt="') + 5);
+        fileName = alt.substring(0, alt.indexOf('"'));
+        hasName = true;
+      }
+      src = s.substring(s.indexOf('src="') + 5);
+      src = src.substring(0, src.indexOf('\"'));
+    }
+    if (!hasName) {
+      fileName = 'web-image';
+    }
+    setSrc(src);
+  }
+
   Project() {
     Canvases.project = this;
     grid = Grid(this);
@@ -300,18 +318,25 @@ class Project {
     });
 
     var previousLoading = '';
+    StreamSubscription mouseUpSub;
 
     editor.onDragEnter.listen((e) {
       previousLoading = loader.innerHtml;
       loading = 'Drop file here!';
+      mouseUpSub = window.onMouseUp.listen((e) {
+        mouseUpSub.cancel();
+        loading = previousLoading;
+      });
     });
     window.onDragOver.listen((e) {
       e.preventDefault();
     });
     editor.onDragLeave.listen((e) {
+      mouseUpSub?.cancel();
       loading = previousLoading;
     });
     window.onDrop.listen((e) {
+      mouseUpSub?.cancel();
       e.preventDefault();
 
       var transfer = e.dataTransfer;
@@ -320,22 +345,23 @@ class Project {
         var file = transfer.files[i];
         return uploadFile(file);
       }
-      for (var type in transfer.types) {
-        var data = transfer.getData(type);
-        //print('$type: $data');
-        if (type == 'text/html') {
-          var src = data.substring(data.indexOf('src=\"') + 5);
-          src = src.substring(0, src.indexOf('\"'));
-          if (data.contains('alt="')) {
-            var alt = data.substring(data.indexOf('alt="') + 5);
-            fileName = alt.substring(0, alt.indexOf('"'));
-          } else {
-            fileName = 'web-image';
-          }
-          return setSrc(src);
+
+      bool parse(String type) {
+        if (transfer.types.contains(type)) {
+          loadFromString(transfer.getData(type));
+          return true;
         }
+        return false;
       }
-      loading = previousLoading;
+
+      if (!parse('text/html') &&
+          !parse('text/plain') &&
+          !parse('text/uri-list')) {
+        for (var type in transfer.types) {
+          print('$type: ' + transfer.getData(type));
+        }
+        loading = previousLoading;
+      }
     });
 
     editor.onMouseDown.listen((e) {
@@ -368,17 +394,7 @@ class Project {
         ''
       ]);
       if (url != null && url.isNotEmpty) {
-        if (url.startsWith('<')) {
-          url = url.substring(url.indexOf('src="') + 5);
-          url = url.substring(0, url.indexOf('"'));
-        }
-        if (url.contains('alt="')) {
-          var alt = url.substring(url.indexOf('alt="') + 5);
-          fileName = alt.substring(0, alt.indexOf('"'));
-        } else {
-          fileName = 'web-image';
-        }
-        setSrc(url);
+        loadFromString(url);
       }
     });
     saveButton.onClick.listen((e) => downloadGrid());
@@ -604,7 +620,7 @@ class Project {
   void initDemo() {
     //setSrc('jon.png');
     loading = 'Start out by dragging an image into this window,'
-        '<br>or by clicking on one of the buttons at the top right!';
+        '<br>or by pressing one of the buttons at the top right!';
   }
 
   void resizeCanvas() {
