@@ -232,9 +232,11 @@ canvas {
   top: 0;
   left: 0;
   pointer-events: none;
+  display: none;
 }
-canvas#fg {
+canvas#main {
   z-index: 1;
+  display: block;
 }
 
 #grid {

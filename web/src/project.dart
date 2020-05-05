@@ -4,6 +4,7 @@ import 'dart:html';
 import 'dart:js';
 import 'dart:math';
 
+import 'canvas.dart';
 import 'grid.dart';
 import 'io.dart';
 
@@ -11,9 +12,7 @@ class Project {
   static const zoomSpeed = 10;
   static const fileExtension = '.grid';
 
-  final CanvasElement fg = querySelector('canvas#fg');
-  final CanvasElement bg = querySelector('canvas#bg');
-  final ImageElement img = querySelector('img');
+  ImageElement get img => Canvases.img;
   final DivElement offsetElement = querySelector('#offset');
   final DivElement editor = querySelector('.image');
   final InputElement ratioCheckbox = querySelector('#keepRatio');
@@ -26,7 +25,7 @@ class Project {
   final ButtonElement exportButton = querySelector('#export');
   final SpanElement storageWarning = querySelector('.warning');
   Point _mousePos;
-  Grid _grid;
+  Grid grid;
   String _fileName;
   set fileName(String s) {
     if (s.contains('.')) {
@@ -153,41 +152,50 @@ class Project {
     });
   }
 
+  void onImageSet() {
+    print('image set');
+    loading = '';
+    Canvases.filteredImg.resize(img.width, img.height);
+    Canvases.inverted.resize(img.width, img.height);
+    setSize();
+
+    try {
+      _storage['src'] = img.src;
+      _blockStorage = false;
+    } catch (e) {
+      _blockStorage = true;
+    } finally {
+      storageWarning.classes.toggle('hidden', !_blockStorage);
+    }
+  }
+
   void setSrc(String src) {
     var oldWidth = img.width;
     loading = 'Loading image...';
     var sub;
     sub = img.onLoad.listen((e) {
       sub.cancel();
+      onImageSet();
       if (lockGrid) {
         lockCheckbox.click();
       }
       if (oldWidth > 0) {
-        _grid.cellSize = _grid.cellSize * (img.width / oldWidth);
+        grid.cellSize = grid.cellSize * (img.width / oldWidth);
         applyCellSize(true, true);
       }
-      _grid.immediateClamp();
+      grid.immediateClamp();
       offset = Point(0, 0);
       zoomWidth = minWidth * 2;
-      loading = '';
-      setSize();
 
-      try {
-        _storage['json'] = json.encode(this);
-        _blockStorage = false;
-      } catch (e) {
-        _blockStorage = true;
-      } finally {
-        storageWarning.classes.toggle('hidden', !_blockStorage);
-      }
+      saveToStorage();
     });
     print('set src to ' + (src.startsWith('data:') ? 'DATA' : src));
     img.src = src;
   }
 
   void applyCellSize(bool x, bool y) {
-    if (x) cellX.value = _grid.cellSize.x.toStringAsFixed(1);
-    if (y) cellY.value = _grid.cellSize.y.toStringAsFixed(1);
+    if (x) cellX.value = grid.cellSize.x.toStringAsFixed(1);
+    if (y) cellY.value = grid.cellSize.y.toStringAsFixed(1);
   }
 
   void moveCursorTag(MouseEvent e) {
@@ -206,17 +214,16 @@ class Project {
     var client = editor.client;
     var center = client.bottomRight * 0.5;
     var gridStart = Grid.round(
-        center + (size * -0.5 + offset + _grid.position) * (1 / zoom));
+        center + (size * -0.5 + offset + grid.position) * (1 / zoom));
     var cursor = Grid.round(_mousePos - editor.offset.topLeft);
     var cursorInGrid = cursor - gridStart;
     var s = '';
     if (cursorInGrid.x >= 0 &&
         cursorInGrid.y >= 0 &&
-        cursorInGrid.x * zoom < _grid.size.x &&
-        cursorInGrid.y * zoom < _grid.size.y) {
-      var cells = Point(
-          1 + ((cursorInGrid.x / _grid.cellSize.x) * zoom).floor(),
-          _grid.array.y - ((cursorInGrid.y / _grid.cellSize.y) * zoom).floor());
+        cursorInGrid.x * zoom < grid.size.x &&
+        cursorInGrid.y * zoom < grid.size.y) {
+      var cells = Point(1 + ((cursorInGrid.x / grid.cellSize.x) * zoom).floor(),
+          grid.array.y - ((cursorInGrid.y / grid.cellSize.y) * zoom).floor());
       s = 'x: ${cells.x}, y: ${cells.y}';
     }
 
@@ -226,32 +233,33 @@ class Project {
   void setCursorTagString(String s) => _cursorTag.children.first.text = s;
 
   Project() {
-    _grid = Grid(this);
+    Canvases.project = this;
+    grid = Grid(this);
 
     registerIntInput(cellX, (v, bonus) {
       if (v < 10 || !bonus) return;
-      _grid.cellSize =
-          Point(v, _grid.cellSize.y * (keepRatio ? v / _grid.cellSize.x : 1));
+      grid.cellSize =
+          Point(v, grid.cellSize.y * (keepRatio ? v / grid.cellSize.x : 1));
       applyCellSize(false, true);
     }, () {
       applyCellSize(true, false);
-      return _grid.cellSize.x.toStringAsFixed(1);
-    }, onMouseUp: _grid.fit);
+      return grid.cellSize.x.toStringAsFixed(1);
+    }, onMouseUp: grid.fit);
     registerIntInput(cellY, (v, bonus) {
       if (v < 10 || !bonus) return;
-      _grid.cellSize =
-          Point(_grid.cellSize.x * (keepRatio ? v / _grid.cellSize.y : 1), v);
+      grid.cellSize =
+          Point(grid.cellSize.x * (keepRatio ? v / grid.cellSize.y : 1), v);
       applyCellSize(true, false);
     }, () {
       applyCellSize(true, true);
-      return _grid.cellSize.y.toStringAsFixed(1);
-    }, onMouseUp: _grid.fit);
+      return grid.cellSize.y.toStringAsFixed(1);
+    }, onMouseUp: grid.fit);
     ratioCheckbox.checked = true;
     applyCellSize(true, true);
     registerIntInput(
         querySelector('#subdivisions'),
-        (v, bonus) => _grid.subdivisions = v.round(),
-        () => _grid.subdivisions.toString());
+        (v, bonus) => grid.subdivisions = v.round(),
+        () => grid.subdivisions.toString());
 
     // urlInput.onKeyDown.listen((e) {
     //   if (e.keyCode == 13) {
@@ -261,7 +269,7 @@ class Project {
 
     lockCheckbox.onInput.listen((e) {
       var lock = lockGrid;
-      _grid.el.style.display = lock ? 'none' : 'block';
+      grid.el.style.display = lock ? 'none' : 'block';
       setCursorTagString('');
       cellX.disabled = lock;
       cellY.disabled = lock;
@@ -443,7 +451,7 @@ class Project {
             break;
         }
         if (diffX != 0 || diffY != 0) {
-          _grid.position = _grid.position + Point(diffX, diffY) * speed;
+          grid.position = grid.position + Point(diffX, diffY) * speed;
           redraw();
         }
       }
@@ -482,16 +490,14 @@ class Project {
   }
 
   void export() async {
-    // Worst practice, duplicate code
     var canvas = CanvasElement(width: img.width, height: img.height);
     var mainCtx = canvas.context2D;
-    mainCtx.filter = 'invert(1) grayscale(1) brightness(0.8) contrast(1000)';
-    mainCtx.drawImage(img, 0, 0);
+    mainCtx.drawImage(Canvases.inverted.e, 0, 0);
 
     var fg = CanvasElement(width: img.width, height: img.height);
     var fgCtx = fg.context2D;
     fgCtx.drawImage(img, 0, 0);
-    _grid.drawOn(fgCtx, Rectangle(0, 0, img.width, img.height), 1);
+    grid.drawOn(fgCtx, Rectangle(0, 0, img.width, img.height), 1);
 
     mainCtx.filter = 'none';
     mainCtx.drawImage(fg, 0, 0);
@@ -535,33 +541,32 @@ class Project {
     }
   }
 
-  Map<String, dynamic> toJson() => {
-        'src': img.src,
+  Map<String, dynamic> toJson({bool addSrc = true}) => {
+        if (addSrc) 'src': img.src,
         'offset': pointToJson(offset),
         'zoomWidth': zoomWidth,
         'lock': lockGrid,
-        'grid': _grid.toJson()
+        'grid': grid.toJson()
       };
-  void fromJson(Map<String, dynamic> json) {
+  void fromJson(Map<String, dynamic> json, [String customSrc]) {
     _offset = pointFromJson(json['offset']);
     _zoomWidth = json['zoomWidth'];
-    _grid.fromJson(json['grid']);
+    grid.fromJson(json['grid']);
     (querySelector('#subdivisions') as InputElement).value =
-        _grid.subdivisions.toString();
+        grid.subdivisions.toString();
     applyCellSize(true, true);
 
     var sub;
     sub = img.onLoad.listen((e) {
       sub.cancel();
-      loading = '';
-      setSize();
+      onImageSet();
       bool shouldLock = json['lock'] ?? true;
       if ((shouldLock && !lockGrid) || (!shouldLock && lockGrid)) {
         lockCheckbox.click();
       }
     });
     loading = 'Loading image...';
-    img.src = json['src'];
+    img.src = customSrc ?? json['src'];
   }
 
   void download(String fileName, String href) {
@@ -581,20 +586,14 @@ class Project {
 
   void saveToStorage() {
     if (!_blockStorage) {
-      try {
-        _storage['json'] = json.encode(this);
-      } catch (e) {
-        _blockStorage = true;
-      } finally {
-        storageWarning.classes.toggle('hidden', !_blockStorage);
-      }
+      _storage['json'] = json.encode(toJson(addSrc: false));
     }
   }
 
   void loadFromStorage() {
     _updateStorage = false;
     if (_storage.isNotEmpty) {
-      fromJson(json.decode(_storage['json']));
+      fromJson(json.decode(_storage['json']), _storage['src']);
     } else {
       initDemo();
     }
@@ -616,44 +615,20 @@ class Project {
   }
 
   void setSize() {
-    _grid.position = _grid.position;
-    _grid.size = _grid.size;
+    grid.position = grid.position;
+    grid.size = grid.size;
     offset = offset;
     updateCursorTagString();
     if (!lockUser) redraw();
   }
 
   void resizeCanvas() {
-    fg.width = editor.clientWidth;
-    fg.height = editor.clientHeight;
-    bg.width = editor.clientWidth;
-    bg.height = editor.clientHeight;
+    Canvases.onResizeEditor();
     if (!lockUser) redraw();
   }
 
   void redraw() {
     _updateStorage = true;
-
-    CanvasRenderingContext2D bgCtx = bg.getContext('2d', {'alpha': false});
-
-    bgCtx.clearRect(0, 0, bg.width, bg.height);
-
-    var client = editor.client;
-    var center = client.bottomRight * 0.5;
-
-    var dest = Rectangle.fromPoints(
-        Grid.round(center + (size * -0.5 + offset) * (1 / zoom)),
-        Grid.round(center + (size * 0.5 + offset) * (1 / zoom)));
-
-    bgCtx.filter = 'invert(1) grayscale(1) brightness(0.8) contrast(1000)';
-    bgCtx.drawImageToRect(img, dest);
-
-    var fgCtx = fg.context2D;
-    fgCtx.globalCompositeOperation = 'source-over';
-    fgCtx.imageSmoothingQuality = 'high';
-    fgCtx.clearRect(0, 0, fg.width, fg.height);
-
-    fgCtx.drawImageToRect(img, dest);
-    _grid.drawOn(fgCtx, dest, zoom);
+    Canvases.redrawEditor();
   }
 }
